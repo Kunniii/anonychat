@@ -25,6 +25,8 @@ WORKDIR /app
 
 COPY --from=server-deps --chown=node:node /app/node_modules ./node_modules
 COPY --chown=node:node package.json *.js ./
+COPY --chown=node:node routes/ ./routes/
+COPY --chown=node:node middlewares/ ./middlewares/
 COPY --from=frontend-build --chown=node:node /build/public ./public
 
 RUN mkdir -p /app/logs && chown node:node /app/logs

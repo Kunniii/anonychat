@@ -25,6 +25,12 @@ services:
         - action: sync+restart
           path: ./reportLog.js
           target: /app/reportLog.js
+        - action: sync+restart
+          path: ./routes
+          target: /app/routes
+        - action: sync+restart
+          path: ./middlewares
+          target: /app/middlewares
 
         # Frontend source files: rebuild image on code changes
         - action: rebuild

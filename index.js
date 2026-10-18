@@ -1,22 +1,18 @@
 import express from 'express';
 import { createServer } from 'http';
-import { randomBytes, timingSafeEqual } from 'node:crypto';
 import path from 'node:path';
 import { WebSocketServer } from 'ws';
 import { v4 as uuid } from 'uuid';
 import chatLogger from './logger.js';
 import { appendMessageLog } from './messageLog.js';
-import { appendFeedbackLog, readRecentFeedback } from './feedbackLog.js';
-import { appendReport, readRecentReports, resolveReport, readBlockList, addToBlockList, removeFromBlockList } from './reportLog.js';
+import { appendFeedbackLog } from './feedbackLog.js';
+import { createAppRouter } from './routes/index.js';
+import { errorHandler } from './middlewares/errorHandler.js';
 
 const app = express();
 const publicDirectory = path.resolve('public');
 app.use(express.json({ limit: '16kb' }));
 app.use(express.static(publicDirectory));
-app.use('/api/admin', (request, response, next) => {
-  response.set('Cache-Control', 'no-store');
-  next();
-});
 
 const server = createServer(app);
 const wss = new WebSocketServer({ server, path: '/ws', maxPayload: 7 * 1024 * 1024 });
@@ -26,9 +22,45 @@ const connections = new Set();
 const clients = new Map();
 const blockedPairs = new Map();
 let isShuttingDown = false;
-app.get('/healthz', (request, response) => {
-  response.status(isShuttingDown ? 503 : 200).type('text/plain').send(isShuttingDown ? 'shutting down' : 'ok');
+
+function broadcastAnnouncement(message) {
+  let recipientCount = 0;
+  connections.forEach((ws) => {
+    if (safeSend(ws, { type: 'announcement', message })) recipientCount++;
+  });
+  return recipientCount;
+}
+
+function broadcastBlockList(words) {
+  connections.forEach((ws) => {
+    safeSend(ws, { type: 'blockList', words });
+  });
+}
+
+function getStats() {
+  return {
+    onlineCount: connections.size,
+    waitingUsers: waiting.length,
+    activePairs: Math.floor((connections.size - waiting.length) / 2)
+  };
+}
+
+// Mount modular API endpoints
+app.use(createAppRouter({
+  getIsShuttingDown: () => isShuttingDown,
+  broadcastAnnouncement,
+  getStats,
+  broadcastBlockList
+}));
+
+// Admin SPA routing
+app.get('/admin', (request, response) => {
+  response.sendFile(path.join(publicDirectory, 'index.html'));
 });
+
+// Centralized error handling
+app.use(errorHandler);
+
 const reconnectGraceSeconds = Number(process.env.RECONNECT_GRACE_SECONDS ?? 120);
 const heartbeatIntervalSeconds = Number(process.env.WS_HEARTBEAT_INTERVAL_SECONDS ?? 10);
 const heartbeatMissedThreshold = Number(process.env.WS_HEARTBEAT_MISSED_THRESHOLD ?? 2);
@@ -57,261 +89,6 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const MAX_FEEDBACK_LENGTH = 2000;
 const MAX_FEEDBACK_USERNAME_LENGTH = 80;
 const FEEDBACK_COOLDOWN_MS = 60 * 1000;
-const REPORT_COOLDOWN_MS = 30 * 1000;
-const MAX_REPORT_MESSAGE_LENGTH = 1000;
-const MAX_REPORT_REASON_LENGTH = 500;
-const MAX_ADMIN_ANNOUNCEMENT_LENGTH = 1000;
-const ADMIN_SESSION_TTL_MS = 8 * 60 * 60 * 1000;
-const adminSessions = new Map();
-const reportCooldowns = new Map();
-
-function isAdminPasswordValid(password) {
-  const configuredPassword = process.env.ADMIN_PASSWORD;
-  if (typeof configuredPassword !== 'string' || !configuredPassword) return false;
-
-  const supplied = Buffer.from(password);
-  const expected = Buffer.from(configuredPassword);
-  return supplied.length === expected.length && timingSafeEqual(supplied, expected);
-}
-
-function getAdminSession(request) {
-  const authorization = request.get('authorization') ?? '';
-  const match = /^Bearer ([a-f0-9]{64})$/.exec(authorization);
-  if (!match) return null;
-
-  const expiresAt = adminSessions.get(match[1]);
-  if (!expiresAt) return null;
-  if (expiresAt <= Date.now()) {
-    adminSessions.delete(match[1]);
-    return null;
-  }
-  return match[1];
-}
-
-app.post('/api/admin/login', (request, response) => {
-  if (!process.env.ADMIN_PASSWORD) {
-    response.status(503).json({ error: 'Trang admin chưa được cấu hình trên server.' });
-    return;
-  }
-  if (typeof request.body?.password !== 'string' || !isAdminPasswordValid(request.body.password)) {
-    response.status(401).json({ error: 'Mật khẩu admin không đúng.' });
-    return;
-  }
-
-  const now = Date.now();
-  for (const [token, expiresAt] of adminSessions) {
-    if (expiresAt <= now) adminSessions.delete(token);
-  }
-
-  const token = randomBytes(32).toString('hex');
-  adminSessions.set(token, now + ADMIN_SESSION_TTL_MS);
-  response.json({ token, expiresInSeconds: ADMIN_SESSION_TTL_MS / 1000 });
-});
-
-app.post('/api/admin/announcements', (request, response) => {
-  if (!getAdminSession(request)) {
-    response.status(401).json({ error: 'Phiên admin đã hết hạn. Vui lòng đăng nhập lại.' });
-    return;
-  }
-
-  const message = typeof request.body?.message === 'string' ? request.body.message.trim() : '';
-  if (!message || message.length > MAX_ADMIN_ANNOUNCEMENT_LENGTH) {
-    response.status(400).json({
-      error: `Thông báo phải dài từ 1 đến ${MAX_ADMIN_ANNOUNCEMENT_LENGTH} ký tự.`
-    });
-    return;
-  }
-
-  let recipientCount = 0;
-  connections.forEach((ws) => {
-    if (safeSend(ws, { type: 'announcement', message })) recipientCount++;
-  });
-  response.json({ recipientCount });
-});
-
-app.get('/api/admin/feedback', async (request, response) => {
-  if (!getAdminSession(request)) {
-    response.status(401).json({ error: 'Phiên admin đã hết hạn. Vui lòng đăng nhập lại.' });
-    return;
-  }
-
-  try {
-    const feedback = await readRecentFeedback();
-    response.json({ feedback });
-  } catch (error) {
-    chatLogger.connectionError('admin-feedback', error);
-    response.status(500).json({ error: 'Không thể tải góp ý lúc này.' });
-  }
-});
-
-app.get('/api/admin/stats', (request, response) => {
-  if (!getAdminSession(request)) {
-    response.status(401).json({ error: 'Phiên admin đã hết hạn. Vui lòng đăng nhập lại.' });
-    return;
-  }
-
-  response.json({
-    onlineCount: connections.size,
-    waitingUsers: waiting.length,
-    activePairs: Math.floor((connections.size - waiting.length) / 2)
-  });
-});
-
-// User submits a report
-app.post('/api/reports', async (request, response) => {
-  const reportedText = typeof request.body?.reportedText === 'string' ? request.body.reportedText.trim() : '';
-  const reason = typeof request.body?.reason === 'string' ? request.body.reason.trim() : '';
-
-  if (!reportedText || reportedText.length > MAX_REPORT_MESSAGE_LENGTH) {
-    response.status(400).json({ error: `Nội dung báo cáo phải dài từ 1 đến ${MAX_REPORT_MESSAGE_LENGTH} ký tự.` });
-    return;
-  }
-  if (reason.length > MAX_REPORT_REASON_LENGTH) {
-    response.status(400).json({ error: `Lý do tối đa ${MAX_REPORT_REASON_LENGTH} ký tự.` });
-    return;
-  }
-
-  // Rate-limit by IP
-  const ip = request.ip || request.socket.remoteAddress || 'unknown';
-  const now = Date.now();
-  const lastReportAt = reportCooldowns.get(ip) ?? 0;
-  if (now - lastReportAt < REPORT_COOLDOWN_MS) {
-    response.status(429).json({ error: 'Bạn vừa gửi báo cáo. Vui lòng chờ một chút.' });
-    return;
-  }
-  reportCooldowns.set(ip, now);
-
-  try {
-    await appendReport({
-      id: `rpt_${now}_${Math.random().toString(36).slice(2, 9)}`,
-      timestamp: new Date().toISOString(),
-      reportedText,
-      reason: reason || null,
-      resolved: false
-    });
-    response.status(201).json({ ok: true });
-  } catch (error) {
-    chatLogger.connectionError('reports', error);
-    response.status(500).json({ error: 'Chưa gửi được báo cáo. Bạn thử lại sau nhé.' });
-  }
-});
-
-// Admin: list reports
-app.get('/api/admin/reports', async (request, response) => {
-  if (!getAdminSession(request)) {
-    response.status(401).json({ error: 'Phiên admin đã hết hạn. Vui lòng đăng nhập lại.' });
-    return;
-  }
-  try {
-    const reports = await readRecentReports();
-    response.json({ reports });
-  } catch (error) {
-    chatLogger.connectionError('admin-reports', error);
-    response.status(500).json({ error: 'Không thể tải báo cáo.' });
-  }
-});
-
-// Admin: resolve report
-app.post('/api/admin/reports/:id/resolve', async (request, response) => {
-  if (!getAdminSession(request)) {
-    response.status(401).json({ error: 'Phiên admin đã hết hạn. Vui lòng đăng nhập lại.' });
-    return;
-  }
-  const reportId = request.params.id;
-  const action = typeof request.body?.action === 'string' ? request.body.action : 'resolved';
-  const blockWord = typeof request.body?.blockWord === 'string' ? request.body.blockWord.trim() : '';
-
-  try {
-    let updatedBlockList = null;
-    if (blockWord) {
-      updatedBlockList = await addToBlockList(blockWord);
-      broadcastBlockList(updatedBlockList);
-    }
-    const resolution = await resolveReport(reportId, {
-      action,
-      blockWord: blockWord || undefined
-    });
-    response.json({ ok: true, resolution, blockList: updatedBlockList });
-  } catch (error) {
-    chatLogger.connectionError('admin-reports-resolve', error);
-    response.status(500).json({ error: 'Không thể xử lý báo cáo.' });
-  }
-});
-
-
-// Admin: get block list
-app.get('/api/admin/block-list', async (request, response) => {
-  if (!getAdminSession(request)) {
-    response.status(401).json({ error: 'Phiên admin đã hết hạn. Vui lòng đăng nhập lại.' });
-    return;
-  }
-  try {
-    const list = await readBlockList();
-    response.json({ blockList: list });
-  } catch (error) {
-    chatLogger.connectionError('admin-block-list', error);
-    response.status(500).json({ error: 'Không thể tải danh sách từ chặn.' });
-  }
-});
-
-// Admin: add word to block list
-app.post('/api/admin/block-list', async (request, response) => {
-  if (!getAdminSession(request)) {
-    response.status(401).json({ error: 'Phiên admin đã hết hạn. Vui lòng đăng nhập lại.' });
-    return;
-  }
-  const word = typeof request.body?.word === 'string' ? request.body.word.trim() : '';
-  if (!word || word.length > 100) {
-    response.status(400).json({ error: 'Từ không hợp lệ.' });
-    return;
-  }
-  try {
-    const updated = await addToBlockList(word);
-    // Broadcast updated block list to all connected clients
-    broadcastBlockList(updated);
-    response.json({ blockList: updated });
-  } catch (error) {
-    chatLogger.connectionError('admin-block-list-add', error);
-    response.status(500).json({ error: 'Không thể thêm từ vào danh sách.' });
-  }
-});
-
-// Admin: remove word from block list
-app.delete('/api/admin/block-list/:word', async (request, response) => {
-  if (!getAdminSession(request)) {
-    response.status(401).json({ error: 'Phiên admin đã hết hạn. Vui lòng đăng nhập lại.' });
-    return;
-  }
-  const word = request.params.word?.trim()?.toLowerCase();
-  if (!word) {
-    response.status(400).json({ error: 'Từ không hợp lệ.' });
-    return;
-  }
-  try {
-    const updated = await removeFromBlockList(word);
-    broadcastBlockList(updated);
-    response.json({ blockList: updated });
-  } catch (error) {
-    chatLogger.connectionError('admin-block-list-remove', error);
-    response.status(500).json({ error: 'Không thể xóa từ khỏi danh sách.' });
-  }
-});
-
-app.delete('/api/admin/session', (request, response) => {
-
-  const token = getAdminSession(request);
-  if (!token) {
-    response.status(401).json({ error: 'Phiên admin đã hết hạn.' });
-    return;
-  }
-
-  adminSessions.delete(token);
-  response.status(204).end();
-});
-
-app.get('/admin', (request, response) => {
-  response.sendFile(path.join(publicDirectory, 'index.html'));
-});
 
 function decodeImageData(data) {
   const match = /^data:image\/jpeg;base64,([A-Za-z0-9+/]+={0,2})$/.exec(data);
