@@ -200,8 +200,25 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
           </a>
         </div>
 
+        {/* Hero Showcase Brand Visual */}
+        <div className="mt-14 relative mx-auto max-w-4xl rounded-[2rem] p-1.5 sm:p-2 bg-white/[0.04] ring-1 ring-white/[0.1] shadow-[0_24px_80px_rgba(0,0,0,0.6)] overflow-hidden group">
+          <div className="relative rounded-[calc(2rem-0.375rem)] overflow-hidden bg-[#0a0b0f] aspect-[16/9] border border-white/[0.06]">
+            <img
+              src="/images/hero-visual.jpg"
+              alt="AnonyChat - Kết nối ngẫu nhiên, sẻ chia ẩn danh"
+              className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02]"
+              loading="eager"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#08090c]/80 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6 flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-xs font-mono-clean text-zinc-300 shadow-lg">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Encrypted Stream // 100% Anonymous 1-on-1</span>
+            </div>
+          </div>
+        </div>
+
         {/* Minimalist Metrics Strip */}
-        <div className="mt-20 pt-10 border-t border-white/[0.07] grid grid-cols-2 md:grid-cols-4 gap-6 text-left max-w-4xl mx-auto">
+        <div className="mt-16 pt-10 border-t border-white/[0.07] grid grid-cols-2 md:grid-cols-4 gap-6 text-left max-w-4xl mx-auto">
           <div>
             <p className="text-[11px] font-mono-clean uppercase tracking-widest text-zinc-500">
               Tốc độ ghép
@@ -338,7 +355,7 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
                     đây yên tĩnh thật, không có newfeed hay tin nhắn phiền phức.
                   </div>
                   <div className="flex items-center justify-end gap-1.5 mt-1 text-[10px] text-zinc-500 font-mono-clean">
-                    <span>Đã chuyển giao</span>
+                    <span>Đã xem</span>
                     <Check className="w-3 h-3 text-emerald-400 stroke-2" />
                   </div>
                 </div>
@@ -468,8 +485,17 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
                   hợp, chỉ một chạm để chuyển sang đối tác mới mà không có độ
                   trễ.
                 </p>
+                <div className="relative mt-5 rounded-2xl overflow-hidden border border-white/[0.08] aspect-[16/9] bg-black/40 group">
+                  <img
+                    src="/images/instant-match.jpg"
+                    alt="Ghép cặp 1-1 thần tốc"
+                    className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0d0e13]/60 via-transparent to-transparent pointer-events-none" />
+                </div>
               </div>
-              <div className="mt-8 pt-5 border-t border-white/[0.06] flex items-center justify-between text-xs font-mono-clean text-zinc-400">
+              <div className="mt-6 pt-5 border-t border-white/[0.06] flex items-center justify-between text-xs font-mono-clean text-zinc-400">
                 <span>Hàng đợi: ngẫu nhiên</span>
                 <span className="text-emerald-400 flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
@@ -493,8 +519,17 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
                   Không email, không số điện thoại, không tài khoản mạng xã hội.
                   Mọi dữ liệu phiên kết nối biến mất hoàn toàn khi bạn rời đi.
                 </p>
+                <div className="relative mt-5 rounded-2xl overflow-hidden border border-white/[0.08] aspect-[16/11] bg-black/40 group">
+                  <img
+                    src="/images/privacy-shield.jpg"
+                    alt="Tuyệt đối riêng tư 0-byte lưu vết"
+                    className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0d0e13]/60 via-transparent to-transparent pointer-events-none" />
+                </div>
               </div>
-              <div className="mt-8 pt-5 border-t border-white/[0.06] flex items-center justify-between text-xs font-mono-clean text-zinc-400">
+              <div className="mt-6 pt-5 border-t border-white/[0.06] flex items-center justify-between text-xs font-mono-clean text-zinc-400">
                 <span>Theo dõi: không lưu</span>
                 <span className="text-sky-400">Ẩn danh 100%</span>
               </div>
@@ -704,6 +739,49 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
               Nếu câu chuyện không còn hợp, bạn có thể chào tạm biệt hoặc bấm
               nút tìm người mới một cách nhẹ nhàng. Không áp lực.
             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── ATMOSPHERIC LATE-NIGHT SANCTUARY SHOWCASE ── */}
+      <section className="relative z-10 py-16 md:py-24 px-4 sm:px-8 max-w-5xl mx-auto">
+        <div className="rounded-[2.5rem] p-1.5 sm:p-2 bg-white/[0.03] ring-1 ring-white/[0.08] shadow-[0_30px_90px_rgba(0,0,0,0.6)] overflow-hidden">
+          <div className="relative rounded-[calc(2.5rem-0.375rem)] overflow-hidden bg-[#0c0d12] border border-white/[0.06] flex flex-col md:flex-row items-center">
+            {/* Left: Atmospheric Visual */}
+            <div className="w-full md:w-3/5 aspect-[16/10] md:aspect-auto md:h-[420px] relative overflow-hidden group">
+              <img
+                src="/images/night-sanctuary.jpg"
+                alt="Không gian tâm sự đêm muộn ấm áp và lắng đọng"
+                className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+                loading="lazy"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-transparent via-transparent to-[#0c0d12] opacity-80 pointer-events-none" />
+            </div>
+
+            {/* Right: Storytelling Editorial Column */}
+            <div className="w-full md:w-2/5 p-7 sm:p-10 flex flex-col justify-center text-left">
+              <span className="text-[11px] font-mono-clean uppercase tracking-[0.2em] text-emerald-400 font-medium">
+                Góc Lắng Đọng Đêm Muộn
+              </span>
+              <h3 className="font-editorial text-2xl sm:text-3xl font-light text-white tracking-tight mt-2.5 leading-snug">
+                Nơi bạn được lắng nghe, không phán xét.
+              </h3>
+              <p className="mt-3.5 text-xs sm:text-sm text-zinc-400 leading-relaxed font-normal">
+                Một tách trà ấm, một đêm mưa rả rích hay những trăn trở chưa thể
+                tỏ cùng ai. Tại AnonyChat, bạn luôn có thể tìm thấy một tâm hồn
+                đồng điệu để trút bầu tâm sự trong sự an tâm tuyệt đối.
+              </p>
+              <div className="mt-6 flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={onStartChat}
+                  className="rounded-full bg-white text-zinc-950 font-semibold px-5 py-2.5 text-xs inline-flex items-center gap-2 transition-all hover:bg-zinc-200 cursor-pointer shadow-md"
+                >
+                  <span>Trò chuyện ngay</span>
+                  <ArrowUpRight className="w-3.5 h-3.5 stroke-[2]" />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </section>
