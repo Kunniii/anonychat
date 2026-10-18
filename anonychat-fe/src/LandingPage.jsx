@@ -14,7 +14,7 @@ import {
   Plus,
   Minus,
   ShieldAlert,
-  Filter
+  Filter,
 } from "lucide-react";
 
 export const LandingPage = ({ onStartChat, onOpenDonation }) => {
@@ -288,7 +288,7 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
                   className="flex items-center gap-1.5 rounded-full border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 px-2.5 py-1 text-[11px] text-rose-300 font-sans-clean transition-colors cursor-pointer"
                 >
                   <ShieldAlert className="w-3 h-3 text-rose-400" />
-                  <span>{mockReportSent ? 'Đã gửi báo cáo!' : 'Báo cáo'}</span>
+                  <span>{mockReportSent ? "Đã gửi báo cáo!" : "Báo cáo"}</span>
                 </button>
                 <span className="text-[11px] font-mono-clean text-zinc-600 hidden sm:inline">
                   anonychat://session
@@ -302,8 +302,11 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
                 <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-3.5 text-xs text-rose-200 flex items-start gap-2.5 transition-all">
                   <ShieldAlert className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
                   <div className="leading-relaxed">
-                    <strong className="text-white block mb-0.5">[HỆ THỐNG KIỂM DUYỆT]:</strong>
-                    Báo cáo vi phạm đã được ghi nhận kèm mã định danh đối phương. Admin sẽ kiểm tra và áp dụng lệnh khóa (Ban UUID) ngay lập tức.
+                    <strong className="text-white block mb-0.5">
+                      [HỆ THỐNG KIỂM DUYỆT]:
+                    </strong>
+                    Báo cáo vi phạm đã được ghi nhận kèm mã định danh đối
+                    phương. Admin sẽ kiểm tra và áp dụng lệnh khóa ngay lập tức.
                   </div>
                 </div>
               )}
@@ -506,8 +509,10 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
                 </h3>
                 <p className="mt-3 text-sm text-zinc-400 leading-relaxed">
                   Gặp phải người lạ quấy rối, spam hay gửi tin nhắn khiếm nhã?
-                  Nút <strong className="text-zinc-200">Báo cáo</strong> luôn sẵn sàng trên thanh điều khiển.
-                  Báo cáo kèm mã Client UUID ẩn được chuyển thẳng tới Admin để ban nick tức thì, bảo vệ bạn mà không làm lộ danh tính.
+                  Nút <strong className="text-zinc-200">Báo cáo</strong> luôn
+                  sẵn sàng trên thanh điều khiển. Báo cáo kèm mã Client UUID ẩn
+                  được chuyển thẳng tới Admin để ban nick tức thì, bảo vệ bạn mà
+                  không làm lộ danh tính.
                 </p>
               </div>
               <div className="mt-8 pt-5 border-t border-white/[0.06] flex items-center justify-between text-xs font-mono-clean text-zinc-400">
@@ -531,8 +536,9 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
                   Bộ lọc nội dung độc hại tự động
                 </h3>
                 <p className="mt-3 text-sm text-zinc-400 leading-relaxed">
-                  Hệ thống tích hợp bộ lọc từ ngữ nhạy cảm đa tầng được tinh chỉnh cho tiếng Việt,
-                  tự động chặn đứng các nội dung lăng mạ, quấy rối và từ ngữ độc hại trước khi đối phương kịp nhìn thấy.
+                  Hệ thống tích hợp bộ lọc từ ngữ nhạy cảm đa tầng được tinh
+                  chỉnh cho tiếng Việt, tự động chặn đứng các nội dung lăng mạ,
+                  quấy rối và từ ngữ độc hại trước khi đối phương kịp nhìn thấy.
                 </p>
               </div>
               <div className="mt-8 pt-5 border-t border-white/[0.06] flex items-center justify-between text-xs font-mono-clean text-zinc-400">
@@ -669,7 +675,10 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
               Lịch sự &amp; Nói không với quấy rối
             </h3>
             <p className="mt-2 text-sm text-zinc-400 leading-relaxed">
-              Không gửi nội dung thô tục, quấy rối hay spam vô nghĩa. Mọi phòng chat đều trang bị sẵn nút "Báo cáo". Ban quản trị xử lý nghiêm và áp dụng cơ chế khóa thiết bị (Ban UUID) có thời hạn hoặc vĩnh viễn với các trường hợp vi phạm.
+              Không gửi nội dung thô tục, quấy rối hay spam vô nghĩa. Mọi phòng
+              chat đều trang bị sẵn nút "Báo cáo". Ban quản trị xử lý nghiêm và
+              áp dụng cơ chế khóa thiết bị có thời hạn hoặc vĩnh viễn với các
+              trường hợp vi phạm.
             </p>
           </div>
 
@@ -718,7 +727,11 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
                     {faq.q}
                   </span>
                   <span className="w-7 h-7 rounded-full border border-white/10 flex items-center justify-center shrink-0 text-zinc-400 group-hover:text-white group-hover:border-white/20 transition-all">
-                    {isOpen ? <Minus className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+                    {isOpen ? (
+                      <Minus className="w-3.5 h-3.5" />
+                    ) : (
+                      <Plus className="w-3.5 h-3.5" />
+                    )}
                   </span>
                 </button>
                 {isOpen && (
