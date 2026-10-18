@@ -309,8 +309,8 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
                     <strong className="text-white block mb-0.5">
                       [HỆ THỐNG KIỂM DUYỆT]:
                     </strong>
-                    Báo cáo vi phạm đã được ghi nhận kèm mã định danh đối
-                    phương. Admin sẽ kiểm tra và áp dụng lệnh khóa ngay lập tức.
+                    Báo cáo vi phạm đã được ghi nhận. Admin sẽ kiểm tra và áp
+                    dụng lệnh khóa ngay lập tức.
                   </div>
                 </div>
               )}
