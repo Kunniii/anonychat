@@ -492,3 +492,10 @@ input {
   animation: yahoo-buzz 0.65s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 
+/* ── TRỐNG ĐỒNG ĐÔNG SƠN GOLD ON RED OVERLAY ── */
+.dong-son-gold-overlay {
+  filter: invert(1) sepia(100%) saturate(1000%) hue-rotate(5deg) brightness(1.2) contrast(1.15);
+  mix-blend-mode: screen;
+}
+
+

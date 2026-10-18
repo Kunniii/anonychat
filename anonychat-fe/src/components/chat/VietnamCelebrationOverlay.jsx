@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
-import confetti from 'canvas-confetti';
-import { Star } from 'lucide-react';
+import React, { useEffect } from "react";
+import confetti from "canvas-confetti";
+import { Star } from "lucide-react";
 
 /**
  * VietnamCelebrationOverlay
@@ -12,13 +12,13 @@ export const VietnamCelebrationOverlay = ({
   isOpen = false,
   isVietnamTheme = false,
   onClose,
-  onToggleVietnamTheme
+  onToggleVietnamTheme,
 }) => {
   useEffect(() => {
     if (isOpen) {
       // Fire red and gold national celebration fireworks
       const end = Date.now() + 2500;
-      const colors = ['#da251d', '#ffff00', '#ffd700', '#b22222', '#ffffff'];
+      const colors = ["#da251d", "#ffff00", "#ffd700", "#b22222", "#ffffff"];
 
       const frame = () => {
         confetti({
@@ -26,14 +26,14 @@ export const VietnamCelebrationOverlay = ({
           angle: 60,
           spread: 70,
           origin: { x: 0, y: 0.7 },
-          colors
+          colors,
         });
         confetti({
           particleCount: 7,
           angle: 120,
           spread: 70,
           origin: { x: 1, y: 0.7 },
-          colors
+          colors,
         });
 
         if (Date.now() < end) {
@@ -56,19 +56,19 @@ export const VietnamCelebrationOverlay = ({
       <div
         className="relative w-full max-w-md p-6 sm:p-8 rounded-3xl text-center overflow-hidden border border-amber-500/40 shadow-[0_0_60px_rgba(218,37,29,0.35)]"
         style={{
-          background: 'linear-gradient(145deg, #2b0609 0%, #170407 100%)',
-          color: '#ffffff'
+          background: "linear-gradient(145deg, #2b0609 0%, #170407 100%)",
+          color: "#ffffff",
         }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Subtle Dong Son drum background watermark */}
-        <div
-          className="absolute inset-0 opacity-10 pointer-events-none flex items-center justify-center"
-          style={{
-            backgroundImage: `radial-gradient(circle, #ffd700 1.5px, transparent 1.5px)`,
-            backgroundSize: '16px 16px'
-          }}
-        />
+        <div className="absolute inset-0 opacity-20 pointer-events-none flex items-center justify-center overflow-hidden">
+          <img
+            src="/images/trong-dong.jpg"
+            alt="Họa tiết Trống Đồng"
+            className="dong-son-gold-overlay w-[360px] h-[360px] object-contain opacity-35"
+          />
+        </div>
 
         {/* Golden Star National Emblem Badge */}
         <div className="relative mx-auto w-24 h-24 rounded-full bg-[#da251d] border-4 border-amber-400 flex items-center justify-center shadow-[0_0_35px_rgba(255,215,0,0.6)] mb-6 animate-pulse">
@@ -86,9 +86,10 @@ export const VietnamCelebrationOverlay = ({
         </h2>
 
         <p className="mt-3 text-sm text-zinc-300 leading-relaxed font-medium">
-          Đất nước ngàn năm văn hiến • Non sông liền một dải!
+          Đất nước nghìn năm văn hiến
           <br />
-          Chúc bạn có những cuộc trò chuyện văn minh, ấm áp và kết nối thêm nhiều người bạn tuyệt vời.
+          Chúc bạn có những cuộc trò chuyện văn minh, ấm áp và kết nối thêm
+          nhiều người bạn tuyệt vời.
         </p>
 
         {/* Action Buttons */}
@@ -101,7 +102,11 @@ export const VietnamCelebrationOverlay = ({
             className="w-full sm:w-auto px-5 py-2.5 rounded-full text-xs font-bold bg-[#da251d] hover:bg-[#b81d16] text-amber-300 border border-amber-400/50 transition-all shadow-[0_0_20px_rgba(218,37,29,0.5)] cursor-pointer inline-flex items-center justify-center gap-1.5"
           >
             <Star className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
-            <span>{isVietnamTheme ? 'Đang dùng Theme Trống Đồng' : 'Kích hoạt Theme Trống Đồng'}</span>
+            <span>
+              {isVietnamTheme
+                ? "Đang dùng Theme Trống Đồng"
+                : "Kích hoạt Theme Trống Đồng"}
+            </span>
           </button>
 
           <button
@@ -112,10 +117,6 @@ export const VietnamCelebrationOverlay = ({
             Đóng [✕]
           </button>
         </div>
-
-        <p className="mt-4 text-[11px] text-zinc-400 font-mono-clean">
-          Gõ <code className="text-amber-300 font-bold">vietnam</code> hoặc <code className="text-amber-300 font-bold">vn</code> bất kỳ lúc nào để bật/tắt
-        </p>
       </div>
     </div>
   );

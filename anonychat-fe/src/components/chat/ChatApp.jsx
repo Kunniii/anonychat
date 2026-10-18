@@ -409,11 +409,11 @@ export const ChatApp = ({ onGoHome }) => {
                 'radial-gradient(circle at 50% 20%, rgba(218, 37, 29, 0.4) 0%, transparent 65%)'
             }}
           />
-          <div className="pointer-events-none fixed inset-0 z-0 flex items-center justify-center opacity-[0.14] text-amber-300 select-none">
+          <div className="pointer-events-none fixed inset-0 z-0 flex items-center justify-center select-none overflow-hidden">
             <img
-              src="/images/trong-dong.png"
-              alt="Họa tiết Trống Đồng"
-              className="max-w-[480px] max-h-[480px] object-contain drop-shadow-[0_0_20px_rgba(255,215,0,0.4)]"
+              src="/images/trong-dong.jpg"
+              alt="Họa tiết Trống Đồng Đông Sơn"
+              className="dong-son-gold-overlay w-[520px] h-[520px] max-w-[88vw] max-h-[88vh] object-contain opacity-25 drop-shadow-[0_0_25px_rgba(255,215,0,0.5)]"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
                 const fallback = document.getElementById('dong-son-svg-motif');
@@ -427,7 +427,7 @@ export const ChatApp = ({ onGoHome }) => {
             <svg
               id="dong-son-svg-motif"
               viewBox="0 0 500 500"
-              className="w-[480px] h-[480px] fill-none stroke-current"
+              className="w-[480px] h-[480px] fill-none stroke-current opacity-[0.14] text-amber-300 hidden"
             >
               <circle cx="250" cy="250" r="230" strokeWidth="4" />
               <circle cx="250" cy="250" r="200" strokeWidth="2" strokeDasharray="6,4" />
