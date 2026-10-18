@@ -174,7 +174,7 @@ export const MessageInput = ({
           }}
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
-          className="max-h-[140px] min-h-[36px] flex-1 resize-none bg-transparent py-1.5 text-sm leading-relaxed text-zinc-100 placeholder:text-zinc-500 focus:outline-none disabled:cursor-not-allowed font-sans-clean"
+          className="max-h-[140px] min-h-[36px] flex-1 resize-none bg-transparent py-1.5 text-[15.5px] sm:text-[16px] leading-relaxed text-zinc-100 placeholder:text-zinc-500 focus:outline-none disabled:cursor-not-allowed"
           placeholder={isConnected ? 'Nhập tin nhắn (gõ /admin để gửi góp ý)...' : 'Đang kết nối...'}
           autoComplete="off"
           autoFocus

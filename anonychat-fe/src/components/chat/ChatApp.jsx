@@ -302,7 +302,7 @@ export const ChatApp = ({ onGoHome }) => {
 
   return (
     <div
-      className="anonychat-app-root fixed inset-0 flex items-center justify-center overflow-hidden bg-[#08090b] text-zinc-100 font-sans-clean"
+      className="anonychat-app-root fixed inset-0 flex items-center justify-center overflow-hidden bg-[#08090b] text-zinc-100 font-chat-mono"
       style={{
         height: `${viewportHeight}px`,
         paddingBottom: keyboardOffset > 0 ? 'max(0.75rem, env(safe-area-inset-bottom))' : undefined,

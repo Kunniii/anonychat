@@ -187,7 +187,7 @@ export const ChatMessage = ({
           onClick={() => setPickerOpen((prev) => !prev)}
           className={`animate-chat-message ${
             isMine ? 'origin-bottom-right' : 'origin-bottom-left'
-          } relative w-fit max-w-full break-words px-4 py-3 text-sm leading-relaxed transition-all duration-200 text-left active:scale-[0.99] cursor-pointer ${
+          } relative w-fit max-w-full break-words px-4 py-3 text-[15.5px] sm:text-[16px] leading-relaxed transition-all duration-200 text-left active:scale-[0.99] cursor-pointer ${
             isMine
               ? 'rounded-2xl rounded-tr-sm bg-zinc-100 text-zinc-950 font-medium shadow-[0_4px_16px_rgba(255,255,255,0.06),inset_0_1px_1px_rgba(255,255,255,0.9)] border border-white/60'
               : 'rounded-2xl rounded-tl-sm bg-[#16171d] border border-white/[0.08] text-zinc-100 shadow-[0_4px_16px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1)]'
