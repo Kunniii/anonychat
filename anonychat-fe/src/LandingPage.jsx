@@ -72,7 +72,7 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
     },
     {
       q: "AnonyChat có tính năng ẩn hay bí mật nào không?",
-      a: "Có tin đồn về một cỗ máy thời gian đưa bạn về thời kỳ Web 1.0 năm 1995 với giao diện Windows 95 xám cổ điển. Nếu bạn biết một từ tiếng Anh mang ý nghĩa 'trường phái cổ điển', hãy thử gõ nó vào khung chat xem điều gì xảy ra...",
+      a: "Nghe đồn chủ nhân của website này rất thích ester egg, và anh ta đã thêm nó vào cùng với cách kích hoạt bằng các chữ cái. Hãy chat chít thật nhiều và tìm ra càng nhiều ester egg càng tốt nhá! Nó nằm trong những con chữ mà bạn gõ thôi!",
     },
   ];
 
@@ -617,7 +617,7 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
                 <span className="text-rose-300/80">Lệnh: /admin</span>
                 <span
                   className="text-zinc-600 hover:text-zinc-400 transition-colors cursor-help"
-                  title="Có một cỗ máy thời gian 1995 bí mật đang chờ bạn khám phá..."
+                  title="Chủ web giấu rất nhiều bí mật trong các con chữ bạn gõ vào khung chat..."
                 >
                   ✨ Easter egg ẩn
                 </span>
