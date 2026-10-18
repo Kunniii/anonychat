@@ -21,8 +21,6 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
     { type: "heart", count: 4 },
     { type: "laugh", count: 2 },
   ]);
-  const [hasCelebrated, setHasCelebrated] = useState(false);
-
   const triggerMockConfetti = () => {
     confetti({
       particleCount: 40,
@@ -30,7 +28,6 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
       origin: { y: 0.65 },
       colors: ["#ffffff", "#a1a1aa", "#6ee7b7", "#93c5fd"],
     });
-    setHasCelebrated(true);
   };
 
   const handleAddMockReaction = (type) => {
@@ -138,10 +135,12 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
             <button
               type="button"
               onClick={onStartChat}
-              className="inline-flex items-center gap-1.5 rounded-full bg-white text-zinc-950 font-semibold px-3.5 sm:px-4 py-1.5 text-xs transition-all duration-300 ease-spring hover:bg-[#e4e4e7] active:scale-[0.97] cursor-pointer"
+              className="inline-flex items-center gap-2 rounded-full bg-white text-zinc-950 font-semibold px-3.5 sm:px-4 py-1.5 text-xs transition-all duration-300 ease-spring hover:bg-[#e4e4e7] active:scale-[0.96] cursor-pointer"
             >
               <span>Vào chat</span>
-              <ArrowUpRight className="w-3.5 h-3.5" />
+              <span className="w-4 h-4 rounded-full bg-black/10 flex items-center justify-center">
+                <ArrowUpRight className="w-2.5 h-2.5 stroke-[2.5]" />
+              </span>
             </button>
           </div>
         </header>
@@ -156,7 +155,7 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
         </div>
 
         {/* Editorial Heading */}
-        <h1 className="font-editorial font-light text-4xl sm:text-6xl md:text-7xl lg:text-[5.25rem] text-white tracking-tight leading-[1.08] max-w-4xl mx-auto">
+        <h1 className="font-editorial font-light text-4xl sm:text-6xl md:text-7xl lg:text-[5.25rem] text-white tracking-tight leading-[1.08] max-w-4xl mx-auto [text-wrap:balance]">
           Gặp gỡ ngẫu nhiên, <br className="hidden sm:inline" />
           <span className="italic font-normal text-zinc-300">sẻ chia</span> ẩn
           danh.
@@ -646,7 +645,7 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
 
       {/* ── GRAND EDITORIAL BOTTOM CTA ── */}
       <section className="relative z-10 py-24 md:py-36 px-4 sm:px-8 max-w-5xl mx-auto text-center border-t border-white/[0.06]">
-        <h2 className="font-editorial text-4xl sm:text-6xl font-light text-white tracking-tight max-w-3xl mx-auto leading-tight">
+        <h2 className="font-editorial text-4xl sm:text-6xl font-light text-white tracking-tight max-w-3xl mx-auto leading-tight [text-wrap:balance]">
           Sẵn sàng cho một câu chuyện <br className="hidden sm:inline" />
           <span className="italic font-normal text-zinc-300">
             hoàn toàn mới?

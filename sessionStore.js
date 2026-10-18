@@ -4,6 +4,38 @@ import path from 'node:path';
 
 let db = null;
 
+let statements = null;
+
+function getStatements() {
+  if (!statements && db) {
+    statements = {
+      saveSession: db.prepare(`
+        INSERT INTO sessions (client_id, partner_id, is_waiting, queued_position, last_seen_at, created_at)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ON CONFLICT(client_id) DO UPDATE SET
+          partner_id = excluded.partner_id,
+          is_waiting = excluded.is_waiting,
+          queued_position = excluded.queued_position,
+          last_seen_at = excluded.last_seen_at;
+      `),
+      updateLastSeen: db.prepare('UPDATE sessions SET last_seen_at = ? WHERE client_id = ?'),
+      updatePartner: db.prepare('UPDATE sessions SET partner_id = ?, is_waiting = 0, last_seen_at = ? WHERE client_id = ?'),
+      deleteSession: db.prepare('DELETE FROM sessions WHERE client_id = ?'),
+      pruneSessions: db.prepare('DELETE FROM sessions WHERE last_seen_at < ?'),
+      selectSessions: db.prepare('SELECT client_id, partner_id, is_waiting, queued_position, last_seen_at, created_at FROM sessions'),
+      saveBlockedPair: db.prepare(`
+        INSERT INTO blocked_pairs (pair_key, expires_at)
+        VALUES (?, ?)
+        ON CONFLICT(pair_key) DO UPDATE SET expires_at = excluded.expires_at
+      `),
+      deleteBlockedPair: db.prepare('DELETE FROM blocked_pairs WHERE pair_key = ?'),
+      pruneBlockedPairs: db.prepare('DELETE FROM blocked_pairs WHERE expires_at <= ?'),
+      selectBlockedPairs: db.prepare('SELECT pair_key, expires_at FROM blocked_pairs')
+    };
+  }
+  return statements;
+}
+
 /**
  * Initializes SQLite database connection and sets up required tables.
  * @param {string} [customPath]
@@ -41,6 +73,9 @@ export function initSessionDb(customPath) {
     );
   `);
 
+  statements = null;
+  getStatements();
+
   return db;
 }
 
@@ -51,17 +86,10 @@ export function initSessionDb(customPath) {
 export function saveSession(session) {
   if (!db || !session?.clientId) return;
 
-  const stmt = db.prepare(`
-    INSERT INTO sessions (client_id, partner_id, is_waiting, queued_position, last_seen_at, created_at)
-    VALUES (?, ?, ?, ?, ?, ?)
-    ON CONFLICT(client_id) DO UPDATE SET
-      partner_id = excluded.partner_id,
-      is_waiting = excluded.is_waiting,
-      queued_position = excluded.queued_position,
-      last_seen_at = excluded.last_seen_at;
-  `);
+  const stmts = getStatements();
+  if (!stmts) return;
 
-  stmt.run(
+  stmts.saveSession.run(
     session.clientId,
     session.partnerId || null,
     session.waiting ? 1 : 0,
@@ -78,8 +106,8 @@ export function saveSession(session) {
  */
 export function updateSessionLastSeen(clientId, timestamp = Date.now()) {
   if (!db || !clientId) return;
-  const stmt = db.prepare('UPDATE sessions SET last_seen_at = ? WHERE client_id = ?');
-  stmt.run(timestamp, clientId);
+  const stmts = getStatements();
+  stmts?.updateLastSeen.run(timestamp, clientId);
 }
 
 /**
@@ -89,8 +117,8 @@ export function updateSessionLastSeen(clientId, timestamp = Date.now()) {
  */
 export function updateSessionPartner(clientId, partnerId) {
   if (!db || !clientId) return;
-  const stmt = db.prepare('UPDATE sessions SET partner_id = ?, is_waiting = 0, last_seen_at = ? WHERE client_id = ?');
-  stmt.run(partnerId || null, Date.now(), clientId);
+  const stmts = getStatements();
+  stmts?.updatePartner.run(partnerId || null, Date.now(), clientId);
 }
 
 /**
@@ -99,8 +127,8 @@ export function updateSessionPartner(clientId, partnerId) {
  */
 export function deleteSession(clientId) {
   if (!db || !clientId) return;
-  const stmt = db.prepare('DELETE FROM sessions WHERE client_id = ?');
-  stmt.run(clientId);
+  const stmts = getStatements();
+  stmts?.deleteSession.run(clientId);
 }
 
 /**
@@ -111,17 +139,17 @@ export function deleteSession(clientId) {
  */
 export function loadActiveSessions(reconnectGraceMs) {
   if (!db) return [];
+  const stmts = getStatements();
+  if (!stmts) return [];
 
   const now = Date.now();
   const cutoff = now - reconnectGraceMs;
 
   // Prune sessions older than grace window
-  const pruneStmt = db.prepare('DELETE FROM sessions WHERE last_seen_at < ?');
-  pruneStmt.run(cutoff);
+  stmts.pruneSessions.run(cutoff);
 
   // Query remaining active sessions
-  const selectStmt = db.prepare('SELECT client_id, partner_id, is_waiting, queued_position, last_seen_at, created_at FROM sessions');
-  const rows = selectStmt.all();
+  const rows = stmts.selectSessions.all();
 
   const activeClientIds = new Set(rows.map((r) => r.client_id));
 
@@ -151,12 +179,8 @@ export function loadActiveSessions(reconnectGraceMs) {
  */
 export function saveBlockedPair(pairKey, expiresAt) {
   if (!db || !pairKey) return;
-  const stmt = db.prepare(`
-    INSERT INTO blocked_pairs (pair_key, expires_at)
-    VALUES (?, ?)
-    ON CONFLICT(pair_key) DO UPDATE SET expires_at = excluded.expires_at
-  `);
-  stmt.run(pairKey, expiresAt);
+  const stmts = getStatements();
+  stmts?.saveBlockedPair.run(pairKey, expiresAt);
 }
 
 /**
@@ -165,8 +189,8 @@ export function saveBlockedPair(pairKey, expiresAt) {
  */
 export function deleteBlockedPair(pairKey) {
   if (!db || !pairKey) return;
-  const stmt = db.prepare('DELETE FROM blocked_pairs WHERE pair_key = ?');
-  stmt.run(pairKey);
+  const stmts = getStatements();
+  stmts?.deleteBlockedPair.run(pairKey);
 }
 
 /**
@@ -175,13 +199,13 @@ export function deleteBlockedPair(pairKey) {
  */
 export function loadActiveBlockedPairs() {
   if (!db) return [];
+  const stmts = getStatements();
+  if (!stmts) return [];
+
   const now = Date.now();
+  stmts.pruneBlockedPairs.run(now);
 
-  const pruneStmt = db.prepare('DELETE FROM blocked_pairs WHERE expires_at <= ?');
-  pruneStmt.run(now);
-
-  const selectStmt = db.prepare('SELECT pair_key, expires_at FROM blocked_pairs');
-  const rows = selectStmt.all();
+  const rows = stmts.selectBlockedPairs.all();
 
   return rows.map((r) => ({
     pairKey: r.pair_key,
@@ -200,5 +224,6 @@ export function closeSessionDb() {
       console.error('Error closing session SQLite DB:', e);
     }
     db = null;
+    statements = null;
   }
 }

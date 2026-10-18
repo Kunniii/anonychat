@@ -108,7 +108,9 @@ const useWebSocket = (playSound) => {
     try {
       const saved = window.sessionStorage.getItem('anonychat-partner-color');
       if (saved && PARTNER_COLORS.includes(saved)) return saved;
-    } catch {}
+    } catch (_err) {
+      // ignore storage error
+    }
     return getRandomPartnerColor();
   });
 
@@ -129,7 +131,9 @@ const useWebSocket = (playSound) => {
       if (partnerColor) {
         window.sessionStorage.setItem('anonychat-partner-color', partnerColor);
       }
-    } catch {}
+    } catch (_err) {
+      // ignore storage error
+    }
   }, [partnerColor]);
   const activityEventCountRef = useRef(0);
   const eventMilestoneTypesRef = useRef(new Map());
@@ -400,6 +404,10 @@ const useWebSocket = (playSound) => {
           setHasActiveConversation(false);
           isReconnecting = false;
           window.sessionStorage.removeItem('anonychat-active-messages');
+          blobUrlsRef.current.forEach((url) => {
+            try { URL.revokeObjectURL(url); } catch (_err) { /* silent */ }
+          });
+          blobUrlsRef.current = [];
         }
 
         if (msg.system?.toLowerCase().includes('connection lost')) {
@@ -412,6 +420,10 @@ const useWebSocket = (playSound) => {
           isReconnecting = false;
           playSound('disconnect');
           window.sessionStorage.removeItem('anonychat-active-messages');
+          blobUrlsRef.current.forEach((url) => {
+            try { URL.revokeObjectURL(url); } catch (_err) { /* silent */ }
+          });
+          blobUrlsRef.current = [];
         }
 
         if (msg.type === 'text' || msg.type === 'image') {
@@ -544,6 +556,10 @@ const useWebSocket = (playSound) => {
       if (websocket && websocket.readyState !== WebSocket.CLOSING && websocket.readyState !== WebSocket.CLOSED) {
         websocket.close();
       }
+      blobUrlsRef.current.forEach((url) => {
+        try { URL.revokeObjectURL(url); } catch (_err) { /* silent */ }
+      });
+      blobUrlsRef.current = [];
     };
   }, [playSound, recordActivityEvent]);
 
@@ -790,10 +806,10 @@ const ChatMessage = ({
           title={formattedTime}
           aria-label="Chạm hoặc nhấn Enter để chọn cảm xúc"
           onClick={() => setPickerOpen((prev) => !prev)}
-          className={`animate-chat-message ${isMine ? 'origin-bottom-right' : 'origin-bottom-left'} relative w-fit max-w-full break-words px-4 py-3 text-sm leading-relaxed transition-all duration-200 text-left cursor-pointer ${
+          className={`animate-chat-message ${isMine ? 'origin-bottom-right' : 'origin-bottom-left'} relative w-fit max-w-full break-words px-4 py-3 text-sm leading-relaxed transition-all duration-200 text-left active:scale-[0.99] cursor-pointer ${
             isMine
-              ? 'rounded-2xl rounded-tr-sm bg-white text-zinc-950 font-medium shadow-[0_2px_12px_rgba(255,255,255,0.06)]'
-              : 'rounded-2xl rounded-tl-sm bg-[#16171d] border border-white/[0.08] text-zinc-100'
+              ? 'rounded-2xl rounded-tr-sm bg-zinc-100 text-zinc-950 font-medium shadow-[0_4px_16px_rgba(255,255,255,0.06),inset_0_1px_1px_rgba(255,255,255,0.9)] border border-white/60'
+              : 'rounded-2xl rounded-tl-sm bg-[#16171d] border border-white/[0.08] text-zinc-100 shadow-[0_4px_16px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1)]'
           }`}
         >
           {image ? (
@@ -968,12 +984,12 @@ const OnlineCounter = ({ count }) => {
 
   return (
     <div
-      className={`inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[11px] font-mono-clean text-zinc-300 transition-all duration-300 ${
+      className={`inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[11px] font-mono-clean text-zinc-300 tabular-nums transition-all duration-300 ${
         isAnimating ? 'scale-[1.03]' : 'scale-100'
       }`}
     >
       <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-      <span>{count ?? 0} online</span>
+      <span className="tabular-nums">{count ?? 0} online</span>
     </div>
   );
 };
@@ -1636,8 +1652,12 @@ const ChatHeader = ({ onlineCount, hasActiveConversation, isUserConnected, onEnd
 
 const ChatContainer = ({ children }) => (
   <div className="relative h-full min-h-0 w-full flex flex-col items-center justify-center p-0 sm:p-4 md:p-6 lg:p-8">
-    <div className="relative flex h-full min-h-0 w-full max-w-4xl xl:max-w-5xl flex-col rounded-none sm:rounded-3xl border-0 sm:border sm:border-white/[0.08] bg-[#0c0d12] shadow-[0_24px_80px_rgba(0,0,0,0.6)] overflow-hidden">
-      {children}
+    {/* Outer Shell for Double-Bezel Architecture */}
+    <div className="relative flex h-full min-h-0 w-full max-w-4xl xl:max-w-5xl flex-col rounded-none sm:rounded-[2rem] sm:p-1.5 sm:bg-white/[0.03] sm:ring-1 sm:ring-white/10 shadow-[0_24px_80px_rgba(0,0,0,0.6)]">
+      {/* Inner Core */}
+      <div className="relative flex h-full min-h-0 w-full flex-col rounded-none sm:rounded-[calc(2rem-0.375rem)] border-0 sm:border sm:border-white/[0.06] bg-[#0c0d12] shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)] overflow-hidden">
+        {children}
+      </div>
     </div>
   </div>
 );

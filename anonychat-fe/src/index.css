@@ -68,18 +68,24 @@ input {
   font: inherit;
 }
 
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
 @keyframes chat-message-arrive {
-  from {
-    transform: scale(0);
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.97);
   }
 
-  to {
-    transform: scale(1);
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
 .animate-chat-message {
-  animation: chat-message-arrive 200ms ease-in-out both;
+  animation: chat-message-arrive 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .easter-egg-toast-wrap {
