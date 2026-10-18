@@ -409,8 +409,26 @@ export const ChatApp = ({ onGoHome }) => {
                 'radial-gradient(circle at 50% 20%, rgba(218, 37, 29, 0.4) 0%, transparent 65%)'
             }}
           />
-          <div className="pointer-events-none fixed inset-0 z-0 flex items-center justify-center opacity-[0.08] text-amber-300">
-            <svg viewBox="0 0 500 500" className="w-[480px] h-[480px] fill-none stroke-current">
+          <div className="pointer-events-none fixed inset-0 z-0 flex items-center justify-center opacity-[0.14] text-amber-300 select-none">
+            <img
+              src="/images/trong-dong.png"
+              alt="Họa tiết Trống Đồng"
+              className="max-w-[480px] max-h-[480px] object-contain drop-shadow-[0_0_20px_rgba(255,215,0,0.4)]"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                const fallback = document.getElementById('dong-son-svg-motif');
+                if (fallback) fallback.style.display = 'block';
+              }}
+              onLoad={(e) => {
+                const fallback = document.getElementById('dong-son-svg-motif');
+                if (fallback) fallback.style.display = 'none';
+              }}
+            />
+            <svg
+              id="dong-son-svg-motif"
+              viewBox="0 0 500 500"
+              className="w-[480px] h-[480px] fill-none stroke-current"
+            >
               <circle cx="250" cy="250" r="230" strokeWidth="4" />
               <circle cx="250" cy="250" r="200" strokeWidth="2" strokeDasharray="6,4" />
               <circle cx="250" cy="250" r="160" strokeWidth="3" />

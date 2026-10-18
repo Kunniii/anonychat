@@ -1,4 +1,4 @@
-import { ArrowLeft, Heart, LogOut, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, Heart, LogOut, ShieldAlert, Star } from 'lucide-react';
 import OnlineCounter from '../common/OnlineCounter.jsx';
 
 export const ChatHeader = ({
@@ -42,11 +42,11 @@ export const ChatHeader = ({
         <button
           type="button"
           onClick={onToggleVietnamTheme}
-          className="inline-flex items-center gap-1 rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-300 hover:bg-amber-500/20 transition-all cursor-pointer shadow-[0_0_12px_rgba(255,215,0,0.25)]"
+          className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/50 bg-[#da251d] hover:bg-[#b81d16] px-3 py-1 text-xs font-bold text-amber-300 transition-all cursor-pointer shadow-[0_0_15px_rgba(218,37,29,0.5)]"
           title="Đang bật Theme Tự Hào Việt Nam (Bấm để tắt)"
         >
-          <span>🇻🇳</span>
-          <span className="hidden sm:inline">Việt Nam</span>
+          <Star className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
+          <span>Việt Nam</span>
         </button>
       )}
     </div>

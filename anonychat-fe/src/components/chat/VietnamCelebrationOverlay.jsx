@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import confetti from 'canvas-confetti';
+import { Star } from 'lucide-react';
 
 /**
  * VietnamCelebrationOverlay
@@ -71,14 +72,13 @@ export const VietnamCelebrationOverlay = ({
 
         {/* Golden Star National Emblem Badge */}
         <div className="relative mx-auto w-24 h-24 rounded-full bg-[#da251d] border-4 border-amber-400 flex items-center justify-center shadow-[0_0_35px_rgba(255,215,0,0.6)] mb-6 animate-pulse">
-          <span className="text-5xl select-none" role="img" aria-label="Ngôi sao vàng Việt Nam">
-            ⭐
-          </span>
+          <Star className="w-12 h-12 text-amber-300 fill-amber-300" />
         </div>
 
         {/* Heading & Subtitle */}
-        <div className="inline-block px-3 py-1 rounded-full text-xs font-bold tracking-widest uppercase bg-amber-400/20 text-amber-300 border border-amber-400/30 mb-3">
-          🇻🇳 EASTER EGG: VIỆT NAM
+        <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-bold tracking-widest uppercase bg-[#da251d] text-amber-300 border border-amber-400/50 mb-3 shadow-[0_0_15px_rgba(218,37,29,0.4)]">
+          <Star className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
+          <span>TỰ HÀO VIỆT NAM</span>
         </div>
 
         <h2 className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-200 to-yellow-400 tracking-tight">
@@ -98,9 +98,10 @@ export const VietnamCelebrationOverlay = ({
             onClick={() => {
               if (onToggleVietnamTheme) onToggleVietnamTheme();
             }}
-            className="w-full sm:w-auto px-5 py-2.5 rounded-full text-xs font-bold bg-amber-400 hover:bg-amber-300 text-zinc-950 transition-all shadow-[0_0_20px_rgba(255,215,0,0.4)] cursor-pointer"
+            className="w-full sm:w-auto px-5 py-2.5 rounded-full text-xs font-bold bg-[#da251d] hover:bg-[#b81d16] text-amber-300 border border-amber-400/50 transition-all shadow-[0_0_20px_rgba(218,37,29,0.5)] cursor-pointer inline-flex items-center justify-center gap-1.5"
           >
-            {isVietnamTheme ? '✓ Đang dùng Theme Trống Đồng' : '🇻🇳 Kích hoạt Theme Trống Đồng'}
+            <Star className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
+            <span>{isVietnamTheme ? 'Đang dùng Theme Trống Đồng' : 'Kích hoạt Theme Trống Đồng'}</span>
           </button>
 
           <button
