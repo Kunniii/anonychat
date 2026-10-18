@@ -1,7 +1,7 @@
 import express from 'express';
 import { createServer } from 'http';
 import path from 'node:path';
-import { WebSocketServer } from 'ws';
+import WebSocket, { WebSocketServer } from 'ws';
 import { v4 as uuid } from 'uuid';
 import chatLogger from './logger.js';
 import { appendMessageLog } from './messageLog.js';
@@ -128,7 +128,7 @@ function broadcastStats() {
   };
 
   connections.forEach(ws => {
-    if (ws.readyState === ws.OPEN) {
+    if (ws.readyState === WebSocket.OPEN) {
       try {
         ws.send(JSON.stringify(stats));
       } catch (error) {
@@ -141,7 +141,7 @@ function broadcastStats() {
 function cleanupWaiting() {
   const initialLength = waiting.length;
   for (let i = waiting.length - 1; i >= 0; i--) {
-    if (waiting[i].readyState !== waiting[i].OPEN) {
+    if (waiting[i].readyState !== WebSocket.OPEN) {
       waiting.splice(i, 1);
     }
   }
@@ -156,7 +156,7 @@ function cleanupWaiting() {
 
 function pair(a, b) {
   // Validate both connections are still open
-  if (a.readyState !== a.OPEN || b.readyState !== b.OPEN) {
+  if (a.readyState !== WebSocket.OPEN || b.readyState !== WebSocket.OPEN) {
     return false;
   }
 
@@ -219,13 +219,13 @@ function matchWaiting() {
 
   for (let i = 0; i < waiting.length; i++) {
     const a = waiting[i];
-    if (a.readyState !== a.OPEN || a.partner) continue;
+    if (a.readyState !== WebSocket.OPEN || a.partner) continue;
 
     const candidates = [];
     for (let j = i + 1; j < waiting.length; j++) {
       const b = waiting[j];
       if (
-        b.readyState === b.OPEN
+        b.readyState === WebSocket.OPEN
         && !b.partner
         && !isPairBlocked(a.session.clientId, b.session.clientId)
       ) {
@@ -249,7 +249,7 @@ function matchWaiting() {
 }
 
 function safeSend(ws, data) {
-  if (ws.readyState === ws.OPEN) {
+  if (ws && ws.readyState === WebSocket.OPEN) {
     try {
       ws.send(JSON.stringify(data));
       return true;
@@ -286,7 +286,7 @@ function expireSession(session) {
       saveSession(partnerSession);
       const partner = partnerSession.ws;
 
-      if (partner && partner.readyState === partner.OPEN) {
+      if (partner && partner.readyState === WebSocket.OPEN) {
         partner.partner = null;
         safeSend(partner, { system: '[SYSTEM] Stranger disconnected.' });
         chatLogger.pairDisconnected(session.clientId, partnerSession.clientId, 'reconnect_timeout');
@@ -314,7 +314,7 @@ function disconnect(ws) {
   if (ws.imageTransfers?.size > 0) {
     const currentPartner = ws.partner;
     for (const [transferId] of ws.imageTransfers) {
-      if (currentPartner?.readyState === currentPartner?.OPEN) {
+      if (currentPartner?.readyState === WebSocket.OPEN) {
         safeSend(currentPartner, { type: 'image_cancel', id: transferId, reason: 'disconnected' });
       }
     }
@@ -335,7 +335,7 @@ function disconnect(ws) {
   if (session.partnerId) {
     const partnerSession = clients.get(session.partnerId);
     const partner = partnerSession?.ws;
-    if (partner && partner.readyState === partner.OPEN) {
+    if (partner && partner.readyState === WebSocket.OPEN) {
       safeSend(partner, {
         system: '[SYSTEM] Stranger connection lost. Reconnecting…',
         reconnectSeconds: reconnectGraceSeconds
@@ -352,7 +352,7 @@ function disconnect(ws) {
 
 function enqueueSession(session, position = waiting.length) {
   const ws = session.ws;
-  if (!ws || ws.readyState !== ws.OPEN || waiting.includes(ws)) return;
+  if (!ws || ws.readyState !== WebSocket.OPEN || waiting.includes(ws)) return;
 
   waiting.splice(Math.min(position, waiting.length), 0, ws);
   session.waiting = true;
@@ -368,7 +368,7 @@ function endConversation(ws) {
   if (!session || !partnerSession) return;
 
   const partner = partnerSession.ws;
-  const partnerIsConnected = Boolean(partner && partner.readyState === partner.OPEN);
+  const partnerIsConnected = Boolean(partner && partner.readyState === WebSocket.OPEN);
 
   blockPair(session.clientId, partnerSession.clientId);
   ws.partner = null;
@@ -426,7 +426,7 @@ function handleBinaryChunk(ws, data) {
   if (chunkIndex >= transfer.totalChunks) return;
 
   const partner = ws.partner;
-  if (!partner || partner.readyState !== partner.OPEN) {
+  if (!partner || partner.readyState !== WebSocket.OPEN) {
     ws.imageTransfers.delete(transferId);
     safeSend(ws, { type: 'image_cancel', id: transferId, reason: 'no_partner' });
     return;
@@ -563,7 +563,7 @@ wss.on('connection', (ws, request) => {
     const partnerSession = clients.get(session.partnerId);
     const partner = partnerSession?.ws;
 
-    if (partner?.readyState === partner.OPEN) {
+    if (partner?.readyState === WebSocket.OPEN) {
       ws.partner = partner;
       partner.partner = ws;
       safeSend(ws, { system: '[SYSTEM] Reconnected to your stranger.' });
@@ -639,7 +639,7 @@ wss.on('connection', (ws, request) => {
         return;
       }
 
-      if (!ws.partner || ws.partner.readyState !== ws.partner.OPEN) {
+      if (!ws.partner || ws.partner.readyState !== WebSocket.OPEN) {
         safeSend(ws, { system: '[SYSTEM] No partner available.' });
         return;
       }
@@ -726,13 +726,13 @@ wss.on('connection', (ws, request) => {
     }
 
     if (msg.type === 'adminFeedback') {
-      if (ws.partner?.readyState === ws.partner.OPEN) {
+      if (ws.partner?.readyState === WebSocket.OPEN) {
         safeSend(ws.partner, { system: '[SYSTEM] Bên kia đang chửi admin.' });
       }
       return;
     }
 
-    if (!ws.partner || ws.partner.readyState !== ws.partner.OPEN) {
+    if (!ws.partner || ws.partner.readyState !== WebSocket.OPEN) {
       safeSend(ws, { system: '[SYSTEM] No partner available.' });
       return;
     }
@@ -773,7 +773,7 @@ wss.on('connection', (ws, request) => {
     }
 
     if (isTextMessage || imageBytes) {
-      if (!ws.partner || ws.partner.readyState !== ws.partner.OPEN) {
+      if (!ws.partner || ws.partner.readyState !== WebSocket.OPEN) {
         safeSend(ws, {
           system: '[SYSTEM] Stranger connection lost. Reconnecting…',
           reconnectSeconds: reconnectGraceSeconds
@@ -803,7 +803,7 @@ wss.on('connection', (ws, request) => {
         }
       }
 
-      if (ws.partner !== recipient || recipient.readyState !== recipient.OPEN) {
+      if (ws.partner !== recipient || recipient.readyState !== WebSocket.OPEN) {
         safeSend(ws, { system: '[SYSTEM] No partner available.' });
         return;
       }
@@ -868,7 +868,7 @@ const heartbeat = setInterval(() => {
 
     aliveCount++;
     ws.isAlive = false;
-    if (ws.readyState === ws.OPEN) {
+    if (ws.readyState === WebSocket.OPEN) {
       ws.ping();
     }
   });

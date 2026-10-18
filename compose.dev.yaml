@@ -26,6 +26,12 @@ services:
           path: ./reportLog.js
           target: /app/reportLog.js
         - action: sync+restart
+          path: ./sessionStore.js
+          target: /app/sessionStore.js
+        - action: sync+restart
+          path: ./profanity.js
+          target: /app/profanity.js
+        - action: sync+restart
           path: ./routes
           target: /app/routes
         - action: sync+restart

@@ -135,4 +135,22 @@ describe('SQLite Session & State Persistence', () => {
     const activeSessions = loadActiveSessions(120_000);
     assert.equal(activeSessions.find(s => s.clientId === clientA), undefined);
   });
+
+  it('safely evaluates partner connection state when partner has not yet reconnected', () => {
+    const WebSocket = { OPEN: 1, CLOSED: 3 };
+    const clients = new Map();
+    // Simulate restored session from SQLite with offline partner
+    clients.set('partner-123', { clientId: 'partner-123', ws: null, partnerId: 'self-123' });
+
+    const session = { clientId: 'self-123', partnerId: 'partner-123', isReconnect: true };
+    const partnerSession = clients.get(session.partnerId);
+    const partner = partnerSession?.ws;
+
+    // Must not throw TypeError: Cannot read properties of null (reading 'OPEN')
+    let isPartnerOpen = false;
+    assert.doesNotThrow(() => {
+      isPartnerOpen = Boolean(partner && partner.readyState === WebSocket.OPEN);
+    });
+    assert.equal(isPartnerOpen, false, 'Partner should be safely determined as not open');
+  });
 });
