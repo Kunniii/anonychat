@@ -218,7 +218,7 @@ export const MessageInput = ({
         aria-label="Chọn hình ảnh"
       />
       <div
-        className={`flex items-center gap-2.5 rounded-full border pl-4 pr-2 py-1.5 sm:py-2 transition-all ${
+        className={`flex items-end gap-2.5 rounded-2xl sm:rounded-[1.375rem] border pl-4 pr-2 py-1.5 sm:py-2 transition-all ${
           isVietnamTheme
             ? 'border-amber-500/30 bg-[#1a0407] focus-within:border-amber-400/60 shadow-[inset_0_1px_1px_rgba(255,215,0,0.05),0_0_15px_rgba(218,37,29,0.2)]'
             : 'border-white/[0.08] bg-[#13141a] focus-within:border-white/25 shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]'
@@ -241,7 +241,7 @@ export const MessageInput = ({
           autoFocus
           disabled={!isConnected}
         />
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-1.5 shrink-0 pb-1">
           {isConnected ? (
             <button
               type="button"

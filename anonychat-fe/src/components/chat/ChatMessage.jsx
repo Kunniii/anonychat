@@ -191,7 +191,7 @@ export const ChatMessage = ({
           } relative w-fit max-w-full break-words px-4 py-3 text-[15.5px] sm:text-[16px] leading-relaxed transition-all duration-200 text-left active:scale-[0.99] cursor-pointer ${
             isMine
               ? isVietnamTheme
-                ? 'rounded-2xl rounded-tr-sm bg-gradient-to-br from-[#ffffff] via-[#fffbfb] to-[#ffebeb] text-zinc-950 font-medium shadow-[0_4px_16px_rgba(218,37,29,0.18),inset_0_1px_1px_rgba(255,255,255,0.9)] border border-rose-300/70'
+                ? 'rounded-2xl rounded-tr-sm bg-gradient-to-br from-[#ffeef1] via-[#fedde3] to-[#fecdd6] text-[#2c0409] font-medium shadow-[0_4px_16px_rgba(218,37,29,0.22),inset_0_1px_1px_rgba(255,255,255,0.85)] border border-rose-300/80'
                 : 'rounded-2xl rounded-tr-sm bg-zinc-100 text-zinc-950 font-medium shadow-[0_4px_16px_rgba(255,255,255,0.06),inset_0_1px_1px_rgba(255,255,255,0.9)] border border-white/60'
               : isVietnamTheme
               ? 'rounded-2xl rounded-tl-sm bg-[#240609]/95 border border-rose-900/60 text-zinc-100 shadow-[0_4px_16px_rgba(0,0,0,0.4),0_0_15px_rgba(218,37,29,0.2),inset_0_1px_0_rgba(255,215,0,0.08)]'
