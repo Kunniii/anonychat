@@ -67,7 +67,7 @@ export const RetroChatView = ({
 
     setProfanityAlert('');
     if (containsProfanity(trimmed, customBlockWords)) {
-      setProfanityAlert('WARNING: Prohibited vocabulary detected by server filter.');
+      setProfanityAlert('CẢNH BÁO: Phát hiện từ ngữ vi phạm quy định.');
       return;
     }
 
@@ -87,7 +87,7 @@ export const RetroChatView = ({
     if (!file || !isUserConnected || isProcessingImage) return;
 
     if (!file.type.startsWith('image/')) {
-      alert('Error: Selected file is not a supported image format.');
+      alert('Lỗi: Tệp được chọn không phải là định dạng hình ảnh hợp lệ.');
       return;
     }
 
@@ -125,7 +125,7 @@ export const RetroChatView = ({
         }
       }
     } catch {
-      alert('Error: Failed to process image upload.');
+      alert('Lỗi: Không thể xử lý ảnh tải lên.');
     }
     setIsProcessingImage(false);
   };
@@ -165,12 +165,12 @@ export const RetroChatView = ({
       >
         <div className="flex items-center gap-2">
           <span>🗔</span>
-          <span>AnonyChat 95 - [Chat Session #1995-V1.0]</span>
+          <span>AnonyChat 95 - [Phiên Trò Chuyện #1995-V1.0]</span>
         </div>
         <div className="flex items-center gap-1">
           <button
             type="button"
-            title="Minimize"
+            title="Thu nhỏ"
             className="w-4 h-3.5 flex items-center justify-center font-bold text-[9px]"
             style={{
               backgroundColor: '#c0c0c0',
@@ -185,7 +185,7 @@ export const RetroChatView = ({
           </button>
           <button
             type="button"
-            title="Maximize"
+            title="Phóng to"
             className="w-4 h-3.5 flex items-center justify-center font-bold text-[9px]"
             style={{
               backgroundColor: '#c0c0c0',
@@ -201,7 +201,7 @@ export const RetroChatView = ({
           <button
             type="button"
             onClick={onToggleRetroMode}
-            title="Close Retro Mode (Return to Modern UI)"
+            title="Đóng Retro (Về giao diện hiện đại)"
             className="w-4 h-3.5 flex items-center justify-center font-bold text-[9px]"
             style={{
               backgroundColor: '#c0c0c0',
@@ -228,22 +228,22 @@ export const RetroChatView = ({
       >
         <div className="flex items-center gap-3">
           <span className="hover:bg-[#000080] hover:text-white px-1 cursor-default">
-            <u>F</u>ile
+            <u>T</u>ệp
           </span>
           <span className="hover:bg-[#000080] hover:text-white px-1 cursor-default">
-            <u>E</u>dit
+            <u>S</u>ửa
           </span>
           <span className="hover:bg-[#000080] hover:text-white px-1 cursor-default">
-            <u>V</u>iew
+            <u>X</u>em
           </span>
           <span className="hover:bg-[#000080] hover:text-white px-1 cursor-default">
-            <u>H</u>elp
+            <u>T</u>rợ giúp
           </span>
         </div>
         <button
           type="button"
           onClick={onToggleRetroMode}
-          title="Return to Modern Theme"
+          title="Quay lại giao diện hiện đại"
           className="px-2 py-0.5 text-[10px] font-bold text-black cursor-pointer hover:bg-white"
           style={{
             backgroundColor: '#d4d0c8',
@@ -251,7 +251,7 @@ export const RetroChatView = ({
             borderColor: '#ffffff #808080 #808080 #ffffff'
           }}
         >
-          [ 🗗 Return to Modern UI ]
+          [ 🗗 Về Giao Diện Hiện Đại ]
         </button>
       </div>
 
@@ -265,7 +265,7 @@ export const RetroChatView = ({
         }}
       >
         <span>
-          <strong>*** EASTER EGG UNLOCKED ***</strong> You are running AnonyChat in 1995 Plain Web 1.0 Mode. Type <code>oldschool</code> again to toggle back.
+          <strong>*** MỞ KHÓA TRỨNG PHỤC SINH ***</strong> Bạn đang trải nghiệm AnonyChat giao diện Web 1.0 năm 1995. Gõ <code>oldschool</code> một lần nữa hoặc bấm nút trên để quay về giao diện hiện đại.
         </span>
       </div>
 
@@ -284,17 +284,17 @@ export const RetroChatView = ({
         }}
       >
         <div className="text-[11px] text-[#666666] border-b border-[#cccccc] pb-1 mb-2">
-          [System Initialized: Dialing BBS Node...]
+          [Hệ thống khởi tạo: Đang quay số modem BBS...]
           <br />
-          [Baud Rate: 57,600 bps | Protocol: TCP/IP AnonySocket]
+          [Tốc độ truyền: 57,600 bps | Giao thức: TCP/IP AnonySocket]
           <br />
-          [Encryption: Plaintext HTML 3.2]
+          [Mã hóa: Văn bản thuần Web 1.0]
         </div>
 
         {messages.length === 0 ? (
           <div className="py-6 text-center text-[#555555]">
-            <p>*** {isUserConnected ? 'CONNECTED TO STRANGER NODE.' : 'LOOKING FOR ONLINE STRANGER...'} ***</p>
-            <p className="mt-1 text-[11px]">Type a greeting in the input box below and press [Enter].</p>
+            <p>*** {isUserConnected ? 'ĐÃ KẾT NỐI VỚI MÁY NGƯỜI LẠ.' : 'ĐANG TÌM KIẾM NGƯỜI LẠ TRỰC TUYẾN...'} ***</p>
+            <p className="mt-1 text-[11px]">Nhập tin nhắn vào ô bên dưới và bấm phím [Enter].</p>
           </div>
         ) : (
           messages.map((msg, idx) => {
@@ -311,7 +311,7 @@ export const RetroChatView = ({
             if (msg.announcement) {
               return (
                 <div key={idx} className="bg-[#ffff99] text-[#cc0000] p-1 border border-[#999900] font-bold text-[11px]">
-                  [BROADCAST]: {msg.announcement}
+                  [THÔNG BÁO]: {msg.announcement}
                 </div>
               );
             }
@@ -319,13 +319,13 @@ export const RetroChatView = ({
             if (msg.type === 'typing') {
               return (
                 <div key={idx} className="text-[#666666] italic text-[11px]">
-                  *** Stranger is typing on their keyboard... ***
+                  *** Người lạ đang gõ phím trên bàn phím... ***
                 </div>
               );
             }
 
             const isMine = msg.isMine;
-            const senderName = isMine ? '<You>' : '<Stranger>';
+            const senderName = isMine ? '<Bạn>' : '<Người Lạ>';
             const senderColor = isMine ? '#008000' : partnerColor || '#000080';
 
             return (
@@ -342,10 +342,10 @@ export const RetroChatView = ({
                   <div className="mt-1 inline-block">
                     <img
                       src={msg.data}
-                      alt="Transmitted image"
+                      alt="Ảnh nhận được"
                       className="max-w-xs max-h-48 border border-black p-0.5 bg-white"
                     />
-                    <div className="text-[10px] text-[#666666] mt-0.5">[Image Attachment]</div>
+                    <div className="text-[10px] text-[#666666] mt-0.5">[Tệp đính kèm]</div>
                   </div>
                 ) : (
                   <span className="text-black whitespace-pre-wrap">{msg.data}</span>
@@ -370,7 +370,7 @@ export const RetroChatView = ({
                       <button
                         type="button"
                         onClick={() => onReact(msg.id, 'heart')}
-                        title="React <3"
+                        title="Thả tim <3"
                         className="text-[#cc0000] hover:underline cursor-pointer"
                       >
                         [&lt;3]
@@ -378,7 +378,7 @@ export const RetroChatView = ({
                       <button
                         type="button"
                         onClick={() => onReact(msg.id, 'laugh')}
-                        title="React :-D"
+                        title="Cười :-D"
                         className="text-[#996600] hover:underline cursor-pointer"
                       >
                         [:-D]
@@ -408,7 +408,7 @@ export const RetroChatView = ({
             value={inputText}
             onChange={handleInputChange}
             disabled={!isUserConnected}
-            placeholder={isUserConnected ? 'Type text here... (type "oldschool" to toggle UI)' : 'Waiting for stranger to connect...'}
+            placeholder={isUserConnected ? 'Nhập tin nhắn vào đây... (gõ "oldschool" để đổi giao diện)' : 'Đang đợi người lạ kết nối...'}
             className="flex-1 px-2 py-1 text-xs outline-none"
             style={{
               backgroundColor: isUserConnected ? '#ffffff' : '#e0e0e0',
@@ -436,7 +436,7 @@ export const RetroChatView = ({
               opacity: isUserConnected && inputText.trim() ? 1 : 0.6
             }}
           >
-            Send &gt;
+            Gửi &gt;
           </button>
         </div>
 
@@ -464,7 +464,7 @@ export const RetroChatView = ({
                 cursor: 'pointer'
               }}
             >
-              {isProcessingImage ? '[ Uploading... ]' : '[ Attach Picture... ]'}
+              {isProcessingImage ? '[ Đang nén ảnh... ]' : '[ Đính Kèm Ảnh... ]'}
             </button>
 
             {hasActiveConversation && onOpenReport && (
@@ -481,7 +481,7 @@ export const RetroChatView = ({
                   cursor: 'pointer'
                 }}
               >
-                [ ! Report User ! ]
+                [ ! Báo Cáo Vi Phạm ! ]
               </button>
             )}
           </div>
@@ -502,7 +502,7 @@ export const RetroChatView = ({
                   cursor: 'pointer'
                 }}
               >
-                [ End Call / Next &gt;&gt; ]
+                [ Rời Phòng / Người Mới &gt;&gt; ]
               </button>
             )}
           </div>
@@ -522,7 +522,7 @@ export const RetroChatView = ({
             boxShadow: 'inset 1px 1px 0px #000000'
           }}
         >
-          {isUserConnected ? 'STATUS: CONNECTED (56.6 Kbps Dial-up)' : 'STATUS: SEARCHING PROTOCOL...'}
+          {isUserConnected ? 'TRẠNG THÁI: ĐÃ KẾT NỐI (Quay số 56.6 Kbps)' : 'TRẠNG THÁI: ĐANG TÌM GIAO THỨC...'}
         </div>
         <div
           className="w-28 px-2 py-0.5 text-center truncate mx-0.5"
@@ -532,7 +532,7 @@ export const RetroChatView = ({
             boxShadow: 'inset 1px 1px 0px #000000'
           }}
         >
-          USERS: {onlineCount}
+          NGƯỜI DÙNG: {onlineCount}
         </div>
         <div
           className="w-36 px-2 py-0.5 text-right truncate"
@@ -542,7 +542,7 @@ export const RetroChatView = ({
             boxShadow: 'inset 1px 1px 0px #000000'
           }}
         >
-          {partnerClientId ? `NODE: ${partnerClientId.slice(0, 8)}` : 'STANDALONE'}
+          {partnerClientId ? `MÃ MÁY: ${partnerClientId.slice(0, 8)}` : 'ĐỘC LẬP'}
         </div>
       </div>
     </div>
