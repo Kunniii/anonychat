@@ -117,6 +117,10 @@ export const VietnamCelebrationOverlay = ({
             Đóng [✕]
           </button>
         </div>
+
+        <p className="mt-4 text-[11px] text-zinc-400 font-mono-clean">
+          Gõ <code className="text-amber-300 font-bold">tự hào việt nam</code> bất kỳ lúc nào để bật/tắt
+        </p>
       </div>
     </div>
   );

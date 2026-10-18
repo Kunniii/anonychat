@@ -48,7 +48,20 @@ export const MessageInput = ({
       return;
     }
 
-    if (trimmed === 'vietnam' || trimmed === '/vietnam' || trimmed === 'vn' || trimmed === '/vn') {
+    const normalizedNoAccent = trimmed
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd');
+
+    if (
+      trimmed === 'tự hào việt nam' ||
+      trimmed === '/tự hào việt nam' ||
+      normalizedNoAccent === 'tu hao viet nam' ||
+      normalizedNoAccent === '/tu hao viet nam' ||
+      trimmed.replace(/\s+/g, '') === 'tựhàoviệtnam' ||
+      normalizedNoAccent.replace(/\s+/g, '') === 'tuhaovietnam' ||
+      normalizedNoAccent.replace(/\s+/g, '') === '/tuhaovietnam'
+    ) {
       setMessage('');
       if (onToggleVietnamMode) {
         onToggleVietnamMode();

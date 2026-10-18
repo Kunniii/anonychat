@@ -499,6 +499,7 @@ export const ChatApp = ({ onGoHome }) => {
             onOpenReport={hasActiveConversation ? handleOpenNavReport : undefined}
             onReact={sendReaction}
             onToggleYahooMode={handleToggleYahooMode}
+            onToggleVietnamMode={handleToggleVietnamMode}
             customBlockWords={customBlockWords}
           />
         </div>

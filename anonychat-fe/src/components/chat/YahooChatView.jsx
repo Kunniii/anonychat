@@ -54,6 +54,7 @@ export const YahooChatView = ({
   onOpenReport,
   onReact,
   onToggleYahooMode,
+  onToggleVietnamMode,
   customBlockWords = []
 }) => {
   const [inputText, setInputText] = useState('');
@@ -136,6 +137,25 @@ export const YahooChatView = ({
     if (lower === 'buzz' || lower === '/buzz') {
       setInputText('');
       triggerBuzz();
+      return;
+    }
+
+    const normalizedNoAccent = lower
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd');
+
+    if (
+      lower === 'tự hào việt nam' ||
+      lower === '/tự hào việt nam' ||
+      normalizedNoAccent === 'tu hao viet nam' ||
+      normalizedNoAccent === '/tu hao viet nam' ||
+      lower.replace(/\s+/g, '') === 'tựhàoviệtnam' ||
+      normalizedNoAccent.replace(/\s+/g, '') === 'tuhaovietnam' ||
+      normalizedNoAccent.replace(/\s+/g, '') === '/tuhaovietnam'
+    ) {
+      setInputText('');
+      if (onToggleVietnamMode) onToggleVietnamMode();
       return;
     }
 
