@@ -1,4 +1,4 @@
-import { ArrowLeft, Heart, LogOut, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, Heart, LogOut, ShieldAlert, Star } from 'lucide-react';
 import OnlineCounter from '../common/OnlineCounter.jsx';
 
 export const ChatHeader = ({
@@ -8,9 +8,15 @@ export const ChatHeader = ({
   onEndConversation,
   onOpenReport,
   onOpenDonation,
-  onGoHome
+  onGoHome,
+  isVietnamTheme = false,
+  onToggleVietnamTheme
 }) => (
-  <header className="flex shrink-0 items-center justify-between gap-3 p-4 sm:p-5 border-b border-white/[0.06] bg-[#0e0f14]/85 backdrop-blur-md">
+  <header
+    className={`flex shrink-0 items-center justify-between gap-3 p-4 sm:p-5 border-b backdrop-blur-md relative z-10 transition-colors duration-500 ${
+      isVietnamTheme ? 'border-amber-500/20 bg-[#220407]/85' : 'border-white/[0.06] bg-[#0e0f14]/85'
+    }`}
+  >
     <div className="flex min-w-0 items-center gap-2.5 sm:gap-3.5">
       {onGoHome && (
         <button
@@ -36,6 +42,17 @@ export const ChatHeader = ({
           {isUserConnected ? 'Đang trò chuyện' : 'Đang tìm người lạ…'}
         </span>
       </div>
+      {isVietnamTheme && (
+        <button
+          type="button"
+          onClick={onToggleVietnamTheme}
+          className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/50 bg-[#da251d] hover:bg-[#b81d16] px-3 py-1 text-xs font-bold text-amber-300 transition-all cursor-pointer shadow-[0_0_15px_rgba(218,37,29,0.5)]"
+          title="Đang bật Theme Tự Hào Việt Nam (Bấm để tắt)"
+        >
+          <Star className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
+          <span>Việt Nam</span>
+        </button>
+      )}
     </div>
     <div className="flex min-w-0 items-center justify-end gap-2">
       <OnlineCounter count={onlineCount} />

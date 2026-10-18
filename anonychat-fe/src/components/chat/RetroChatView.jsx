@@ -24,6 +24,8 @@ export const RetroChatView = ({
   onOpenReport,
   onReact,
   onToggleRetroMode,
+  onToggleVietnamMode,
+  onToggleYahooMode,
   customBlockWords = [],
 }) => {
   const [inputText, setInputText] = useState("");
@@ -59,12 +61,35 @@ export const RetroChatView = ({
     if (!inputText.trim() || !isUserConnected) return;
 
     const trimmed = inputText.trim();
-    if (
-      trimmed.toLowerCase() === "oldschool" ||
-      trimmed.toLowerCase() === "/oldschool"
-    ) {
+    const lower = trimmed.toLowerCase();
+    if (lower === "oldschool" || lower === "/oldschool") {
       setInputText("");
       if (onToggleRetroMode) onToggleRetroMode();
+      return;
+    }
+
+    const normalizedNoAccent = lower
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/đ/g, "d");
+
+    if (
+      lower === "tự hào việt nam" ||
+      lower === "/tự hào việt nam" ||
+      normalizedNoAccent === "tu hao viet nam" ||
+      normalizedNoAccent === "/tu hao viet nam" ||
+      lower.replace(/\s+/g, "") === "tựhàoviệtnam" ||
+      normalizedNoAccent.replace(/\s+/g, "") === "tuhaovietnam" ||
+      normalizedNoAccent.replace(/\s+/g, "") === "/tuhaovietnam"
+    ) {
+      setInputText("");
+      if (onToggleVietnamMode) onToggleVietnamMode();
+      return;
+    }
+
+    if (lower === "tiemnet" || lower === "/tiemnet" || lower === "yahoo" || lower === "/yahoo") {
+      setInputText("");
+      if (onToggleYahooMode) onToggleYahooMode();
       return;
     }
 

@@ -7,8 +7,12 @@ export const MessageInput = ({
   onTyping,
   onOpenAdmin,
   onToggleRetroMode,
+  onToggleVietnamMode,
+  onToggleYahooMode,
+  onBuzz,
   isConnected,
-  customBlockWords = []
+  customBlockWords = [],
+  isVietnamTheme = false
 }) => {
   const [message, setMessage] = useState('');
   const [isProcessingImage, setIsProcessingImage] = useState(false);
@@ -41,6 +45,43 @@ export const MessageInput = ({
       setMessage('');
       if (onToggleRetroMode) {
         onToggleRetroMode();
+      }
+      return;
+    }
+
+    const normalizedNoAccent = trimmed
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd');
+
+    if (
+      trimmed === 'tự hào việt nam' ||
+      trimmed === '/tự hào việt nam' ||
+      normalizedNoAccent === 'tu hao viet nam' ||
+      normalizedNoAccent === '/tu hao viet nam' ||
+      trimmed.replace(/\s+/g, '') === 'tựhàoviệtnam' ||
+      normalizedNoAccent.replace(/\s+/g, '') === 'tuhaovietnam' ||
+      normalizedNoAccent.replace(/\s+/g, '') === '/tuhaovietnam'
+    ) {
+      setMessage('');
+      if (onToggleVietnamMode) {
+        onToggleVietnamMode();
+      }
+      return;
+    }
+
+    if (trimmed === 'tiemnet' || trimmed === '/tiemnet' || trimmed === 'yahoo' || trimmed === '/yahoo') {
+      setMessage('');
+      if (onToggleYahooMode) {
+        onToggleYahooMode();
+      }
+      return;
+    }
+
+    if (trimmed === 'buzz' || trimmed === '/buzz') {
+      setMessage('');
+      if (onBuzz) {
+        onBuzz();
       }
       return;
     }
@@ -162,7 +203,11 @@ export const MessageInput = ({
   };
 
   return (
-    <div className="shrink-0 border-t border-white/[0.06] bg-[#0e0f14]/85 backdrop-blur-md p-4 sm:p-5">
+    <div
+      className={`relative z-10 shrink-0 border-t backdrop-blur-md p-4 sm:p-5 transition-colors duration-500 ${
+        isVietnamTheme ? 'border-amber-500/20 bg-[#220407]/85' : 'border-white/[0.06] bg-[#0e0f14]/85'
+      }`}
+    >
       <input
         ref={imageInputRef}
         type="file"
@@ -172,7 +217,13 @@ export const MessageInput = ({
         tabIndex={-1}
         aria-label="Chọn hình ảnh"
       />
-      <div className="flex items-center gap-2.5 rounded-full border border-white/[0.08] bg-[#13141a] pl-4 pr-2 py-1.5 sm:py-2 focus-within:border-white/25 transition-all shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]">
+      <div
+        className={`flex items-center gap-2.5 rounded-full border pl-4 pr-2 py-1.5 sm:py-2 transition-all ${
+          isVietnamTheme
+            ? 'border-amber-500/30 bg-[#1a0407] focus-within:border-amber-400/60 shadow-[inset_0_1px_1px_rgba(255,215,0,0.05),0_0_15px_rgba(218,37,29,0.2)]'
+            : 'border-white/[0.08] bg-[#13141a] focus-within:border-white/25 shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]'
+        }`}
+      >
         <textarea
           ref={inputRef}
           rows={1}

@@ -20,7 +20,7 @@ export const ChatLog = ({ messages, isUserConnected, onReact, onReport, partnerC
   return (
     <div
       ref={logRef}
-      className="relative min-h-0 flex-1 overflow-y-auto bg-transparent p-4 sm:p-6"
+      className="relative z-10 min-h-0 flex-1 overflow-y-auto bg-transparent p-4 sm:p-6"
       style={{
         scrollbarWidth: 'thin',
         scrollbarColor: 'rgba(255,255,255,0.12) transparent'

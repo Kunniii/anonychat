@@ -13,6 +13,8 @@ import ReportModal from '../modals/ReportModal.jsx';
 import DonationModal from '../modals/DonationModal.jsx';
 import BannedOverlay from '../modals/BannedOverlay.jsx';
 import RetroChatView from './RetroChatView.jsx';
+import VietnamCelebrationOverlay from './VietnamCelebrationOverlay.jsx';
+import YahooChatView from './YahooChatView.jsx';
 
 export const ChatApp = ({ onGoHome }) => {
   const { playSound } = useAudio();
@@ -119,14 +121,57 @@ export const ChatApp = ({ onGoHome }) => {
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isDonationOpen, setIsDonationOpen] = useState(false);
   const [isRetroMode, setIsRetroMode] = useState(false);
+  const [isYahooMode, setIsYahooMode] = useState(false);
+  const [isVietnamCelebrationOpen, setIsVietnamCelebrationOpen] = useState(false);
+  const [isVietnamTheme, setIsVietnamTheme] = useState(false);
+  const [isBuzzing, setIsBuzzing] = useState(false);
   const [easterEggQueue, setEasterEggQueue] = useState([]);
   const lastCelebratedMilestonesRef = useRef({ messages: 0, events: 0 });
   const celebrationRevisionRef = useRef(0);
 
   const handleToggleRetroMode = useCallback(() => {
     setIsRetroMode((prev) => !prev);
+    if (isYahooMode) setIsYahooMode(false);
+    playSound?.('message');
+  }, [isYahooMode, playSound]);
+
+  const handleToggleYahooMode = useCallback(() => {
+    setIsYahooMode((prev) => !prev);
+    if (isRetroMode) setIsRetroMode(false);
+    playSound?.('message');
+  }, [isRetroMode, playSound]);
+
+  const handleToggleVietnamMode = useCallback(() => {
+    setIsVietnamCelebrationOpen(true);
+    setIsVietnamTheme((prev) => !prev);
     playSound?.('message');
   }, [playSound]);
+
+  const handleBuzz = useCallback(() => {
+    setIsBuzzing(true);
+    try {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioContextClass) {
+        const ctx = new AudioContextClass();
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(140, now);
+        osc.frequency.exponentialRampToValueAtTime(70, now + 0.45);
+        gain.gain.setValueAtTime(0.35, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.45);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.45);
+      }
+    } catch {}
+
+    setTimeout(() => {
+      setIsBuzzing(false);
+    }, 650);
+  }, []);
 
   useEffect(() => {
     const messageCount = messages.filter(
@@ -325,16 +370,23 @@ export const ChatApp = ({ onGoHome }) => {
   return (
     <div
       className={`anonychat-app-root fixed inset-0 flex items-center justify-center overflow-hidden font-chat-mono transition-colors duration-300 ${
-        isRetroMode ? 'anonychat-retro-root bg-[#008080] text-black' : 'bg-[#08090b] text-zinc-100'
-      }`}
+        isRetroMode ? 'anonychat-retro-root text-black' : isYahooMode ? 'text-zinc-900' : 'text-zinc-100'
+      } ${isBuzzing ? 'animate-yahoo-buzz' : ''}`}
       style={{
+        backgroundColor: isRetroMode
+          ? '#008080'
+          : isYahooMode
+          ? '#431952'
+          : isVietnamTheme
+          ? '#180407'
+          : '#08090b',
         height: `${viewportHeight}px`,
         paddingBottom: keyboardOffset > 0 ? 'max(0.75rem, env(safe-area-inset-bottom))' : undefined,
         paddingTop: keyboardOffset > 0 ? 'max(0.75rem, env(safe-area-inset-top))' : undefined,
         justifyContent: keyboardOffset > 0 ? 'flex-start' : 'center'
       }}
     >
-      {!isRetroMode && (
+      {!isRetroMode && !isYahooMode && !isVietnamTheme && (
         <div
           className="pointer-events-none fixed inset-0 z-0 opacity-30"
           style={{
@@ -343,6 +395,17 @@ export const ChatApp = ({ onGoHome }) => {
               radial-gradient(circle at 85% 50%, rgba(110, 231, 183, 0.03) 0%, transparent 50%),
               radial-gradient(circle at 15% 80%, rgba(147, 197, 253, 0.03) 0%, transparent 50%)
             `
+          }}
+        />
+      )}
+
+      {/* ── VIETNAM RADIAL AMBIENT GLOW ── */}
+      {isVietnamTheme && !isRetroMode && !isYahooMode && (
+        <div
+          className="pointer-events-none fixed inset-0 z-0 opacity-40"
+          style={{
+            backgroundImage:
+              'radial-gradient(circle at 50% 20%, rgba(218, 37, 29, 0.4) 0%, transparent 65%)'
           }}
         />
       )}
@@ -381,11 +444,32 @@ export const ChatApp = ({ onGoHome }) => {
             onOpenReport={hasActiveConversation ? handleOpenNavReport : undefined}
             onReact={sendReaction}
             onToggleRetroMode={handleToggleRetroMode}
+            onToggleVietnamMode={handleToggleVietnamMode}
+            onToggleYahooMode={handleToggleYahooMode}
+            customBlockWords={customBlockWords}
+          />
+        </div>
+      ) : isYahooMode ? (
+        <div className="relative z-10 w-full h-full p-0 sm:p-4 flex items-center justify-center">
+          <YahooChatView
+            messages={messages}
+            isUserConnected={isUserConnected}
+            hasActiveConversation={hasActiveConversation}
+            onlineCount={onlineCount}
+            partnerClientId={partnerClientId}
+            partnerColor={partnerColor}
+            onSendMessage={handleSendMessage}
+            onTyping={handleTyping}
+            onEndConversation={handleEndConversation}
+            onOpenReport={hasActiveConversation ? handleOpenNavReport : undefined}
+            onReact={sendReaction}
+            onToggleYahooMode={handleToggleYahooMode}
+            onToggleVietnamMode={handleToggleVietnamMode}
             customBlockWords={customBlockWords}
           />
         </div>
       ) : (
-        <ChatContainer>
+        <ChatContainer isVietnamTheme={isVietnamTheme}>
           <ChatHeader
             onlineCount={onlineCount}
             hasActiveConversation={hasActiveConversation}
@@ -394,6 +478,8 @@ export const ChatApp = ({ onGoHome }) => {
             onOpenReport={hasActiveConversation ? handleOpenNavReport : undefined}
             onOpenDonation={() => setIsDonationOpen(true)}
             onGoHome={onGoHome}
+            isVietnamTheme={isVietnamTheme}
+            onToggleVietnamTheme={handleToggleVietnamMode}
           />
           <ChatLog
             messages={messages}
@@ -407,8 +493,12 @@ export const ChatApp = ({ onGoHome }) => {
             onTyping={handleTyping}
             onOpenAdmin={handleOpenFeedback}
             onToggleRetroMode={handleToggleRetroMode}
+            onToggleVietnamMode={handleToggleVietnamMode}
+            onToggleYahooMode={handleToggleYahooMode}
+            onBuzz={handleBuzz}
             isConnected={isUserConnected}
             customBlockWords={customBlockWords}
+            isVietnamTheme={isVietnamTheme}
           />
         </ChatContainer>
       )}
@@ -430,6 +520,16 @@ export const ChatApp = ({ onGoHome }) => {
       )}
       {isDonationOpen && <DonationModal onClose={handleCloseDonation} />}
       {bannedInfo && <BannedOverlay banInfo={bannedInfo} onDismiss={clearBannedInfo} />}
+
+      <VietnamCelebrationOverlay
+        isOpen={isVietnamCelebrationOpen}
+        isVietnamTheme={isVietnamTheme}
+        onClose={() => setIsVietnamCelebrationOpen(false)}
+        onToggleVietnamTheme={() => {
+          setIsVietnamTheme((prev) => !prev);
+          setIsVietnamCelebrationOpen(false);
+        }}
+      />
     </div>
   );
 };
