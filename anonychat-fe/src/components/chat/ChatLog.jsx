@@ -32,10 +32,10 @@ export const ChatLog = ({ messages, isUserConnected, onReact, onReport, partnerC
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-white/[0.04] border border-white/[0.08] text-zinc-400">
               <MessageSquare className="h-6 w-6 stroke-[1.8]" />
             </div>
-            <h2 className="font-editorial text-xl sm:text-2xl font-light text-white tracking-tight">
+            <h2 className="text-xl sm:text-2xl font-light text-white tracking-tight">
               {isUserConnected ? 'Đã kết nối với người lạ' : 'Đang tìm kiếm người trò chuyện…'}
             </h2>
-            <p className="mt-2 text-xs sm:text-sm text-zinc-400 leading-relaxed font-sans-clean">
+            <p className="mt-2 text-xs sm:text-sm text-zinc-400 leading-relaxed">
               {isUserConnected
                 ? 'Hãy gửi lời chào đầu tiên một cách lịch sự và tự nhiên.'
                 : 'Hệ thống đang ghép cặp ngẫu nhiên. Xin bạn chờ trong giây lát.'}

@@ -62,7 +62,7 @@ export const SystemMessage = ({ message }) => {
           countdownActive ? 'motion-safe:animate-pulse' : ''
         }`}
       />
-      <span className={`text-center text-[9px] font-medium tracking-wide ${textStyle}`}>
+      <span className={`text-center text-[11px] sm:text-xs font-medium tracking-wide ${textStyle}`}>
         {label}
         {hasCountdown && !message.reconnectEndedAt ? ` · ${remainingSeconds}s` : ''}
       </span>
