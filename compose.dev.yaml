@@ -1,0 +1,9 @@
+services:
+  anonychat.products.dev.codechovui.dev:
+    build: .
+    volumes:
+      - ./logs:/app/logs
+    env_file:
+      - .env
+    ports:
+      - 3030:3000
