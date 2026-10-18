@@ -413,7 +413,7 @@ export const ChatApp = ({ onGoHome }) => {
             <img
               src="/images/trong-dong.jpg"
               alt="Họa tiết Trống Đồng Đông Sơn"
-              className="dong-son-gold-overlay w-[520px] h-[520px] max-w-[88vw] max-h-[88vh] object-contain opacity-25 drop-shadow-[0_0_25px_rgba(255,215,0,0.5)]"
+              className="dong-son-gold-overlay w-[750px] h-[750px] sm:w-[950px] sm:h-[950px] max-w-none object-contain opacity-50 drop-shadow-[0_0_35px_rgba(255,215,0,0.35)]"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
                 const fallback = document.getElementById('dong-son-svg-motif');
@@ -504,7 +504,7 @@ export const ChatApp = ({ onGoHome }) => {
           />
         </div>
       ) : (
-        <ChatContainer>
+        <ChatContainer isVietnamTheme={isVietnamTheme}>
           <ChatHeader
             onlineCount={onlineCount}
             hasActiveConversation={hasActiveConversation}
@@ -533,6 +533,7 @@ export const ChatApp = ({ onGoHome }) => {
             onBuzz={handleBuzz}
             isConnected={isUserConnected}
             customBlockWords={customBlockWords}
+            isVietnamTheme={isVietnamTheme}
           />
         </ChatContainer>
       )}

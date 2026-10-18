@@ -12,7 +12,11 @@ export const ChatHeader = ({
   isVietnamTheme = false,
   onToggleVietnamTheme
 }) => (
-  <header className="flex shrink-0 items-center justify-between gap-3 p-4 sm:p-5 border-b border-white/[0.06] bg-[#0e0f14]/85 backdrop-blur-md">
+  <header
+    className={`flex shrink-0 items-center justify-between gap-3 p-4 sm:p-5 border-b backdrop-blur-md relative z-10 transition-colors duration-500 ${
+      isVietnamTheme ? 'border-amber-500/20 bg-[#220407]/85' : 'border-white/[0.06] bg-[#0e0f14]/85'
+    }`}
+  >
     <div className="flex min-w-0 items-center gap-2.5 sm:gap-3.5">
       {onGoHome && (
         <button

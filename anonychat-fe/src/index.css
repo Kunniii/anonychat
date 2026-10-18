@@ -494,7 +494,7 @@ input {
 
 /* ── TRỐNG ĐỒNG ĐÔNG SƠN GOLD ON RED OVERLAY ── */
 .dong-son-gold-overlay {
-  filter: invert(1) sepia(100%) saturate(1000%) hue-rotate(5deg) brightness(1.2) contrast(1.15);
+  filter: invert(1) sepia(100%) saturate(650%) hue-rotate(5deg) brightness(1.1) contrast(0.95) blur(0.4px);
   mix-blend-mode: screen;
 }
 
