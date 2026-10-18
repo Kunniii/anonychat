@@ -15,6 +15,7 @@ import {
   Minus,
   ShieldAlert,
   Filter,
+  Terminal,
 } from "lucide-react";
 
 export const LandingPage = ({ onStartChat, onOpenDonation }) => {
@@ -69,6 +70,10 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
     {
       q: "Tính năng gửi góp ý bằng lệnh /admin hoạt động như thế nào?",
       a: "Đây là đường dây trực tiếp kết nối tới đội ngũ phát triển. Trong phòng chat, bạn có thể bấm nút góp ý hoặc gõ /admin để chia sẻ cảm nghĩ, phản ánh lỗi hay đề xuất tính năng mới.",
+    },
+    {
+      q: "Nghe nói AnonyChat có 'trứng phục sinh' (Easter Egg) bí mật?",
+      a: "Chính xác! Nếu bạn muốn hoài niệm về thời kỳ Internet sơ khai những năm 1990 với giao diện xám 3D nổi Windows 95, font chữ máy đánh chữ và tốc độ quay số modem, hãy gõ từ khóa 'oldschool' trong khung chat để kích hoạt cỗ máy thời gian quay về Web 1.0 năm 1995. Gõ lại một lần nữa hoặc bấm nút trên thanh tiêu đề để trở về hiện tại.",
     },
   ];
 
@@ -410,6 +415,10 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
                   <ShieldAlert className="w-3 h-3 text-rose-400" />
                   <span>Báo cáo vi phạm</span>
                 </button>
+                <div className="rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-xs text-amber-300/90 inline-flex items-center gap-1.5 select-none">
+                  <span>🕹️</span>
+                  <span>Easter Egg: gõ <strong>oldschool</strong> để đổi giao diện 1995</span>
+                </div>
               </div>
 
               <button
@@ -590,27 +599,33 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
             </div>
           </div>
 
-          {/* Card 7: Direct Dev Channel (col-span-4) */}
-          <div className="md:col-span-4 rounded-[2rem] p-1.5 bg-white/[0.03] ring-1 ring-white/[0.08] transition-all duration-300 hover:ring-white/20">
+          {/* Card 7: Direct Dev Channel & Secret Retro Easter Egg (col-span-4) */}
+          <div className="md:col-span-4 rounded-[2rem] p-1.5 bg-white/[0.03] ring-1 ring-white/[0.08] transition-all duration-300 hover:ring-amber-500/30">
             <div className="h-full rounded-[calc(2rem-0.375rem)] bg-[#0d0e13] p-7 md:p-8 flex flex-col justify-between shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
               <div>
-                <div className="w-10 h-10 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-300 mb-6">
-                  <MessageSquareCode className="w-5 h-5" />
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-300 mb-6">
+                  <Terminal className="w-5 h-5" />
                 </div>
                 <h3 className="text-lg font-medium text-white tracking-tight">
-                  Kênh tâm sự nhà phát triển
+                  Lệnh bí mật &amp; Góp ý dev
                 </h3>
                 <p className="mt-2.5 text-xs text-zinc-400 leading-relaxed">
                   Gõ lệnh{" "}
                   <code className="font-mono-clean text-zinc-200 bg-white/[0.06] px-1.5 py-0.5 rounded text-[11px]">
                     /admin
                   </code>{" "}
-                  trong khung chat để gửi ý kiến phản hồi hoặc góp ý thẳng thắn
-                  cho dev.
+                  để gửi tâm sự tới dev. Hoặc thử gõ từ khóa bí mật{" "}
+                  <code className="font-mono-clean text-amber-300 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded text-[11px]">
+                    oldschool
+                  </code>{" "}
+                  trong khung chat để mở khóa cỗ máy thời gian Windows 95 hoài niệm!
                 </p>
               </div>
-              <div className="mt-6 pt-4 border-t border-white/[0.06] text-xs font-mono-clean text-rose-300/80">
-                Lệnh nhanh: /admin
+              <div className="mt-6 pt-4 border-t border-white/[0.06] flex items-center justify-between text-xs font-mono-clean text-zinc-400">
+                <span className="text-rose-300/80">/admin</span>
+                <span className="text-amber-300/90 flex items-center gap-1 font-medium">
+                  <span>🕹️</span> oldschool
+                </span>
               </div>
             </div>
           </div>

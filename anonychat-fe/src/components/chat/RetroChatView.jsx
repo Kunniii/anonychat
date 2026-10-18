@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
-import { containsProfanity } from '../../profanity.js';
+import React, { useState, useRef, useEffect, useLayoutEffect } from "react";
+import { containsProfanity } from "../../profanity.js";
 
 /**
  * Retro 90s Web 1.0 / Windows 95 Interface
@@ -16,7 +16,7 @@ export const RetroChatView = ({
   isUserConnected = false,
   hasActiveConversation = false,
   onlineCount = 0,
-  partnerClientId = '',
+  partnerClientId = "",
   partnerColor = null,
   onSendMessage,
   onTyping,
@@ -24,10 +24,10 @@ export const RetroChatView = ({
   onOpenReport,
   onReact,
   onToggleRetroMode,
-  customBlockWords = []
+  customBlockWords = [],
 }) => {
-  const [inputText, setInputText] = useState('');
-  const [profanityAlert, setProfanityAlert] = useState('');
+  const [inputText, setInputText] = useState("");
+  const [profanityAlert, setProfanityAlert] = useState("");
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const logRef = useRef(null);
   const inputRef = useRef(null);
@@ -59,35 +59,38 @@ export const RetroChatView = ({
     if (!inputText.trim() || !isUserConnected) return;
 
     const trimmed = inputText.trim();
-    if (trimmed.toLowerCase() === 'oldschool' || trimmed.toLowerCase() === '/oldschool') {
-      setInputText('');
+    if (
+      trimmed.toLowerCase() === "oldschool" ||
+      trimmed.toLowerCase() === "/oldschool"
+    ) {
+      setInputText("");
       if (onToggleRetroMode) onToggleRetroMode();
       return;
     }
 
-    setProfanityAlert('');
+    setProfanityAlert("");
     if (containsProfanity(trimmed, customBlockWords)) {
-      setProfanityAlert('CẢNH BÁO: Phát hiện từ ngữ vi phạm quy định.');
+      setProfanityAlert("CẢNH BÁO: Phát hiện từ ngữ vi phạm quy định.");
       return;
     }
 
     const messageId = `msg_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
     if (onSendMessage) {
       onSendMessage({
-        type: 'text',
+        type: "text",
         data: trimmed,
-        id: messageId
+        id: messageId,
       });
     }
-    setInputText('');
+    setInputText("");
   };
 
   const handleImageFile = async (e) => {
     const file = e.target.files?.[0];
     if (!file || !isUserConnected || isProcessingImage) return;
 
-    if (!file.type.startsWith('image/')) {
-      alert('Lỗi: Tệp được chọn không phải là định dạng hình ảnh hợp lệ.');
+    if (!file.type.startsWith("image/")) {
+      alert("Lỗi: Tệp được chọn không phải là định dạng hình ảnh hợp lệ.");
       return;
     }
 
@@ -96,27 +99,27 @@ export const RetroChatView = ({
       const bitmap = await createImageBitmap(file);
       const longestSide = Math.max(bitmap.width, bitmap.height);
       const scale = Math.min(1, 1600 / longestSide);
-      const canvas = document.createElement('canvas');
+      const canvas = document.createElement("canvas");
       canvas.width = Math.max(1, Math.round(bitmap.width * scale));
       canvas.height = Math.max(1, Math.round(bitmap.height * scale));
 
-      const context = canvas.getContext('2d');
+      const context = canvas.getContext("2d");
       if (context) {
-        context.fillStyle = '#ffffff';
+        context.fillStyle = "#ffffff";
         context.fillRect(0, 0, canvas.width, canvas.height);
         context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
 
         const blob = await new Promise((resolve) =>
-          canvas.toBlob(resolve, 'image/jpeg', 0.8)
+          canvas.toBlob(resolve, "image/jpeg", 0.8),
         );
         if (blob && onSendMessage) {
           const reader = new FileReader();
           reader.onloadend = () => {
             const messageId = `msg_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
             onSendMessage({
-              type: 'image',
+              type: "image",
               data: reader.result,
-              id: messageId
+              id: messageId,
             });
             setIsProcessingImage(false);
           };
@@ -125,18 +128,18 @@ export const RetroChatView = ({
         }
       }
     } catch {
-      alert('Lỗi: Không thể xử lý ảnh tải lên.');
+      alert("Lỗi: Không thể xử lý ảnh tải lên.");
     }
     setIsProcessingImage(false);
   };
 
   const formatTime = (ts) => {
-    if (!ts) return '';
+    if (!ts) return "";
     try {
       const d = new Date(ts);
-      return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
+      return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}:${String(d.getSeconds()).padStart(2, "0")}`;
     } catch {
-      return '';
+      return "";
     }
   };
 
@@ -144,23 +147,24 @@ export const RetroChatView = ({
     <div
       className="retro-90s-window w-full h-full max-w-4xl mx-auto flex flex-col select-text"
       style={{
-        backgroundColor: '#c0c0c0',
-        fontFamily: "'Courier New', Courier, 'Lucida Console', Monaco, monospace",
-        color: '#000000',
-        border: '3px solid',
-        borderColor: '#ffffff #808080 #808080 #ffffff',
-        boxShadow: '2px 2px 0px #000000',
-        boxSizing: 'border-box'
+        backgroundColor: "#c0c0c0",
+        fontFamily:
+          "'Courier New', Courier, 'Lucida Console', Monaco, monospace",
+        color: "#000000",
+        border: "3px solid",
+        borderColor: "#ffffff #808080 #808080 #ffffff",
+        boxShadow: "2px 2px 0px #000000",
+        boxSizing: "border-box",
       }}
     >
       {/* ── WINDOW TITLE BAR ── */}
       <div
         className="flex items-center justify-between px-2 py-1 select-none"
         style={{
-          background: 'linear-gradient(90deg, #000080 0%, #1084d0 100%)',
-          color: '#ffffff',
-          fontWeight: 'bold',
-          fontSize: '12px'
+          background: "linear-gradient(90deg, #000080 0%, #1084d0 100%)",
+          color: "#ffffff",
+          fontWeight: "bold",
+          fontSize: "12px",
         }}
       >
         <div className="flex items-center gap-2">
@@ -173,12 +177,12 @@ export const RetroChatView = ({
             title="Thu nhỏ"
             className="w-4 h-3.5 flex items-center justify-center font-bold text-[9px]"
             style={{
-              backgroundColor: '#c0c0c0',
-              color: '#000000',
-              border: '1px solid',
-              borderColor: '#ffffff #808080 #808080 #ffffff',
-              lineHeight: '1',
-              cursor: 'default'
+              backgroundColor: "#c0c0c0",
+              color: "#000000",
+              border: "1px solid",
+              borderColor: "#ffffff #808080 #808080 #ffffff",
+              lineHeight: "1",
+              cursor: "default",
             }}
           >
             _
@@ -188,12 +192,12 @@ export const RetroChatView = ({
             title="Phóng to"
             className="w-4 h-3.5 flex items-center justify-center font-bold text-[9px]"
             style={{
-              backgroundColor: '#c0c0c0',
-              color: '#000000',
-              border: '1px solid',
-              borderColor: '#ffffff #808080 #808080 #ffffff',
-              lineHeight: '1',
-              cursor: 'default'
+              backgroundColor: "#c0c0c0",
+              color: "#000000",
+              border: "1px solid",
+              borderColor: "#ffffff #808080 #808080 #ffffff",
+              lineHeight: "1",
+              cursor: "default",
             }}
           >
             □
@@ -204,12 +208,12 @@ export const RetroChatView = ({
             title="Đóng Retro (Về giao diện hiện đại)"
             className="w-4 h-3.5 flex items-center justify-center font-bold text-[9px]"
             style={{
-              backgroundColor: '#c0c0c0',
-              color: '#000000',
-              border: '1px solid',
-              borderColor: '#ffffff #808080 #808080 #ffffff',
-              lineHeight: '1',
-              cursor: 'pointer'
+              backgroundColor: "#c0c0c0",
+              color: "#000000",
+              border: "1px solid",
+              borderColor: "#ffffff #808080 #808080 #ffffff",
+              lineHeight: "1",
+              cursor: "pointer",
             }}
           >
             ✕
@@ -221,9 +225,9 @@ export const RetroChatView = ({
       <div
         className="flex items-center justify-between px-2 py-0.5 border-b select-none text-xs"
         style={{
-          backgroundColor: '#c0c0c0',
-          borderColor: '#808080',
-          fontSize: '11px'
+          backgroundColor: "#c0c0c0",
+          borderColor: "#808080",
+          fontSize: "11px",
         }}
       >
         <div className="flex items-center gap-3">
@@ -246,9 +250,9 @@ export const RetroChatView = ({
           title="Quay lại giao diện hiện đại"
           className="px-2 py-0.5 text-[10px] font-bold text-black cursor-pointer hover:bg-white"
           style={{
-            backgroundColor: '#d4d0c8',
-            border: '1px solid',
-            borderColor: '#ffffff #808080 #808080 #ffffff'
+            backgroundColor: "#d4d0c8",
+            border: "1px solid",
+            borderColor: "#ffffff #808080 #808080 #ffffff",
           }}
         >
           [ 🗗 Về Giao Diện Hiện Đại ]
@@ -259,13 +263,15 @@ export const RetroChatView = ({
       <div
         className="px-3 py-1 text-[11px] border-b"
         style={{
-          backgroundColor: '#ffffcc',
-          color: '#333300',
-          borderColor: '#cccc99'
+          backgroundColor: "#ffffcc",
+          color: "#333300",
+          borderColor: "#cccc99",
         }}
       >
         <span>
-          <strong>*** MỞ KHÓA TRỨNG PHỤC SINH ***</strong> Bạn đang trải nghiệm AnonyChat giao diện Web 1.0 năm 1995. Gõ <code>oldschool</code> một lần nữa hoặc bấm nút trên để quay về giao diện hiện đại.
+          <strong>*** ĐÃ TÌM THẤY ESTER EGG ***</strong> Bạn đang trải nghiệm
+          AnonyChat giao diện Web 1.0 năm 1995. Gõ <code>oldschool</code> một
+          lần nữa hoặc bấm nút trên để quay về giao diện hiện đại.
         </span>
       </div>
 
@@ -274,13 +280,13 @@ export const RetroChatView = ({
         ref={logRef}
         className="flex-1 p-3 overflow-y-auto space-y-1 text-xs"
         style={{
-          backgroundColor: '#ffffff',
-          color: '#000000',
-          border: '2px solid',
-          borderColor: '#808080 #ffffff #ffffff #808080',
-          boxShadow: 'inset 1px 1px 0px #000000',
-          margin: '4px',
-          minHeight: '200px'
+          backgroundColor: "#ffffff",
+          color: "#000000",
+          border: "2px solid",
+          borderColor: "#808080 #ffffff #ffffff #808080",
+          boxShadow: "inset 1px 1px 0px #000000",
+          margin: "4px",
+          minHeight: "200px",
         }}
       >
         <div className="text-[11px] text-[#666666] border-b border-[#cccccc] pb-1 mb-2">
@@ -293,8 +299,16 @@ export const RetroChatView = ({
 
         {messages.length === 0 ? (
           <div className="py-6 text-center text-[#555555]">
-            <p>*** {isUserConnected ? 'ĐÃ KẾT NỐI VỚI MÁY NGƯỜI LẠ.' : 'ĐANG TÌM KIẾM NGƯỜI LẠ TRỰC TUYẾN...'} ***</p>
-            <p className="mt-1 text-[11px]">Nhập tin nhắn vào ô bên dưới và bấm phím [Enter].</p>
+            <p>
+              ***{" "}
+              {isUserConnected
+                ? "ĐÃ KẾT NỐI VỚI MÁY NGƯỜI LẠ."
+                : "ĐANG TÌM KIẾM NGƯỜI LẠ TRỰC TUYẾN..."}{" "}
+              ***
+            </p>
+            <p className="mt-1 text-[11px]">
+              Nhập tin nhắn vào ô bên dưới và bấm phím [Enter].
+            </p>
           </div>
         ) : (
           messages.map((msg, idx) => {
@@ -302,7 +316,10 @@ export const RetroChatView = ({
 
             if (msg.system) {
               return (
-                <div key={idx} className="text-[#000080] font-bold text-[11px] py-0.5">
+                <div
+                  key={idx}
+                  className="text-[#000080] font-bold text-[11px] py-0.5"
+                >
                   *** {msg.system} ***
                 </div>
               );
@@ -310,13 +327,16 @@ export const RetroChatView = ({
 
             if (msg.announcement) {
               return (
-                <div key={idx} className="bg-[#ffff99] text-[#cc0000] p-1 border border-[#999900] font-bold text-[11px]">
+                <div
+                  key={idx}
+                  className="bg-[#ffff99] text-[#cc0000] p-1 border border-[#999900] font-bold text-[11px]"
+                >
                   [THÔNG BÁO]: {msg.announcement}
                 </div>
               );
             }
 
-            if (msg.type === 'typing') {
+            if (msg.type === "typing") {
               return (
                 <div key={idx} className="text-[#666666] italic text-[11px]">
                   *** Người lạ đang gõ phím trên bàn phím... ***
@@ -325,30 +345,39 @@ export const RetroChatView = ({
             }
 
             const isMine = msg.isMine;
-            const senderName = isMine ? '<Bạn>' : '<Người Lạ>';
-            const senderColor = isMine ? '#008000' : partnerColor || '#000080';
+            const senderName = isMine ? "<Bạn>" : "<Người Lạ>";
+            const senderColor = isMine ? "#008000" : partnerColor || "#000080";
 
             return (
               <div
                 key={msg.id || idx}
                 className="py-0.5 leading-relaxed break-words hover:bg-[#f0f0f0]"
               >
-                <span className="text-[#808080] mr-1.5 select-none">[{timeStr}]</span>
-                <span style={{ color: senderColor, fontWeight: 'bold' }} className="mr-1.5">
+                <span className="text-[#808080] mr-1.5 select-none">
+                  [{timeStr}]
+                </span>
+                <span
+                  style={{ color: senderColor, fontWeight: "bold" }}
+                  className="mr-1.5"
+                >
                   {senderName}
                 </span>
 
-                {msg.type === 'image' ? (
+                {msg.type === "image" ? (
                   <div className="mt-1 inline-block">
                     <img
                       src={msg.data}
                       alt="Ảnh nhận được"
                       className="max-w-xs max-h-48 border border-black p-0.5 bg-white"
                     />
-                    <div className="text-[10px] text-[#666666] mt-0.5">[Tệp đính kèm]</div>
+                    <div className="text-[10px] text-[#666666] mt-0.5">
+                      [Tệp đính kèm]
+                    </div>
                   </div>
                 ) : (
-                  <span className="text-black whitespace-pre-wrap">{msg.data}</span>
+                  <span className="text-black whitespace-pre-wrap">
+                    {msg.data}
+                  </span>
                 )}
 
                 {/* Retro reaction counter & trigger */}
@@ -361,7 +390,13 @@ export const RetroChatView = ({
                           key={type}
                           className="px-1 border border-[#999999] bg-[#eeeeee] text-[#333333]"
                         >
-                          [{type === 'heart' ? '<3' : type === 'laugh' ? ':-D' : ':)'} x{count}]
+                          [
+                          {type === "heart"
+                            ? "<3"
+                            : type === "laugh"
+                              ? ":-D"
+                              : ":)"}{" "}
+                          x{count}]
                         </span>
                       );
                     })}
@@ -369,7 +404,7 @@ export const RetroChatView = ({
                     <span className="inline-flex items-center gap-1">
                       <button
                         type="button"
-                        onClick={() => onReact(msg.id, 'heart')}
+                        onClick={() => onReact(msg.id, "heart")}
                         title="Thả tim <3"
                         className="text-[#cc0000] hover:underline cursor-pointer"
                       >
@@ -377,7 +412,7 @@ export const RetroChatView = ({
                       </button>
                       <button
                         type="button"
-                        onClick={() => onReact(msg.id, 'laugh')}
+                        onClick={() => onReact(msg.id, "laugh")}
                         title="Cười :-D"
                         className="text-[#996600] hover:underline cursor-pointer"
                       >
@@ -400,7 +435,11 @@ export const RetroChatView = ({
       )}
 
       {/* ── RETRO INPUT & CONTROL CONSOLE ── */}
-      <form onSubmit={handleFormSubmit} className="p-1 space-y-1" style={{ backgroundColor: '#c0c0c0' }}>
+      <form
+        onSubmit={handleFormSubmit}
+        className="p-1 space-y-1"
+        style={{ backgroundColor: "#c0c0c0" }}
+      >
         <div className="flex gap-1 items-center">
           <input
             ref={inputRef}
@@ -408,16 +447,20 @@ export const RetroChatView = ({
             value={inputText}
             onChange={handleInputChange}
             disabled={!isUserConnected}
-            placeholder={isUserConnected ? 'Nhập tin nhắn vào đây... (gõ "oldschool" để đổi giao diện)' : 'Đang đợi người lạ kết nối...'}
+            placeholder={
+              isUserConnected
+                ? 'Nhập tin nhắn vào đây... (gõ "oldschool" để đổi giao diện)'
+                : "Đang đợi người lạ kết nối..."
+            }
             className="flex-1 px-2 py-1 text-xs outline-none"
             style={{
-              backgroundColor: isUserConnected ? '#ffffff' : '#e0e0e0',
-              color: '#000000',
-              border: '2px solid',
-              borderColor: '#808080 #ffffff #ffffff #808080',
-              boxShadow: 'inset 1px 1px 0px #000000',
+              backgroundColor: isUserConnected ? "#ffffff" : "#e0e0e0",
+              color: "#000000",
+              border: "2px solid",
+              borderColor: "#808080 #ffffff #ffffff #808080",
+              boxShadow: "inset 1px 1px 0px #000000",
               fontFamily: "'Courier New', Courier, monospace",
-              borderRadius: 0
+              borderRadius: 0,
             }}
           />
 
@@ -426,14 +469,15 @@ export const RetroChatView = ({
             disabled={!inputText.trim() || !isUserConnected}
             className="px-3 py-1 text-xs font-bold uppercase transition-all"
             style={{
-              backgroundColor: '#c0c0c0',
-              color: '#000000',
-              border: '2px solid',
-              borderColor: '#ffffff #808080 #808080 #ffffff',
-              boxShadow: '1px 1px 0px #000000',
+              backgroundColor: "#c0c0c0",
+              color: "#000000",
+              border: "2px solid",
+              borderColor: "#ffffff #808080 #808080 #ffffff",
+              boxShadow: "1px 1px 0px #000000",
               borderRadius: 0,
-              cursor: isUserConnected && inputText.trim() ? 'pointer' : 'default',
-              opacity: isUserConnected && inputText.trim() ? 1 : 0.6
+              cursor:
+                isUserConnected && inputText.trim() ? "pointer" : "default",
+              opacity: isUserConnected && inputText.trim() ? 1 : 0.6,
             }}
           >
             Gửi &gt;
@@ -456,15 +500,17 @@ export const RetroChatView = ({
               disabled={!isUserConnected || isProcessingImage}
               className="px-2 py-0.5 text-[11px]"
               style={{
-                backgroundColor: '#c0c0c0',
-                border: '1px solid',
-                borderColor: '#ffffff #808080 #808080 #ffffff',
-                boxShadow: '1px 1px 0px #000000',
+                backgroundColor: "#c0c0c0",
+                border: "1px solid",
+                borderColor: "#ffffff #808080 #808080 #ffffff",
+                boxShadow: "1px 1px 0px #000000",
                 borderRadius: 0,
-                cursor: 'pointer'
+                cursor: "pointer",
               }}
             >
-              {isProcessingImage ? '[ Đang nén ảnh... ]' : '[ Đính Kèm Ảnh... ]'}
+              {isProcessingImage
+                ? "[ Đang nén ảnh... ]"
+                : "[ Đính Kèm Ảnh... ]"}
             </button>
 
             {hasActiveConversation && onOpenReport && (
@@ -473,12 +519,12 @@ export const RetroChatView = ({
                 onClick={onOpenReport}
                 className="px-2 py-0.5 text-[11px] text-[#800000] font-bold"
                 style={{
-                  backgroundColor: '#c0c0c0',
-                  border: '1px solid',
-                  borderColor: '#ffffff #808080 #808080 #ffffff',
-                  boxShadow: '1px 1px 0px #000000',
+                  backgroundColor: "#c0c0c0",
+                  border: "1px solid",
+                  borderColor: "#ffffff #808080 #808080 #ffffff",
+                  boxShadow: "1px 1px 0px #000000",
                   borderRadius: 0,
-                  cursor: 'pointer'
+                  cursor: "pointer",
                 }}
               >
                 [ ! Báo Cáo Vi Phạm ! ]
@@ -493,13 +539,13 @@ export const RetroChatView = ({
                 onClick={onEndConversation}
                 className="px-2.5 py-0.5 text-[11px] font-bold"
                 style={{
-                  backgroundColor: '#c0c0c0',
-                  color: '#990000',
-                  border: '1px solid',
-                  borderColor: '#ffffff #808080 #808080 #ffffff',
-                  boxShadow: '1px 1px 0px #000000',
+                  backgroundColor: "#c0c0c0",
+                  color: "#990000",
+                  border: "1px solid",
+                  borderColor: "#ffffff #808080 #808080 #ffffff",
+                  boxShadow: "1px 1px 0px #000000",
                   borderRadius: 0,
-                  cursor: 'pointer'
+                  cursor: "pointer",
                 }}
               >
                 [ Rời Phòng / Người Mới &gt;&gt; ]
@@ -512,24 +558,26 @@ export const RetroChatView = ({
       {/* ── 3-PANEL DIAL-UP STATUS BAR ── */}
       <div
         className="flex items-center justify-between text-[10px] select-none border-t border-[#ffffff] p-0.5"
-        style={{ backgroundColor: '#c0c0c0' }}
+        style={{ backgroundColor: "#c0c0c0" }}
       >
         <div
           className="flex-1 px-2 py-0.5 truncate"
           style={{
-            border: '1px solid',
-            borderColor: '#808080 #ffffff #ffffff #808080',
-            boxShadow: 'inset 1px 1px 0px #000000'
+            border: "1px solid",
+            borderColor: "#808080 #ffffff #ffffff #808080",
+            boxShadow: "inset 1px 1px 0px #000000",
           }}
         >
-          {isUserConnected ? 'TRẠNG THÁI: ĐÃ KẾT NỐI (Quay số 56.6 Kbps)' : 'TRẠNG THÁI: ĐANG TÌM GIAO THỨC...'}
+          {isUserConnected
+            ? "TRẠNG THÁI: ĐÃ KẾT NỐI (Quay số 56.6 Kbps)"
+            : "TRẠNG THÁI: ĐANG TÌM GIAO THỨC..."}
         </div>
         <div
           className="w-28 px-2 py-0.5 text-center truncate mx-0.5"
           style={{
-            border: '1px solid',
-            borderColor: '#808080 #ffffff #ffffff #808080',
-            boxShadow: 'inset 1px 1px 0px #000000'
+            border: "1px solid",
+            borderColor: "#808080 #ffffff #ffffff #808080",
+            boxShadow: "inset 1px 1px 0px #000000",
           }}
         >
           NGƯỜI DÙNG: {onlineCount}
@@ -537,12 +585,14 @@ export const RetroChatView = ({
         <div
           className="w-36 px-2 py-0.5 text-right truncate"
           style={{
-            border: '1px solid',
-            borderColor: '#808080 #ffffff #ffffff #808080',
-            boxShadow: 'inset 1px 1px 0px #000000'
+            border: "1px solid",
+            borderColor: "#808080 #ffffff #ffffff #808080",
+            boxShadow: "inset 1px 1px 0px #000000",
           }}
         >
-          {partnerClientId ? `MÃ MÁY: ${partnerClientId.slice(0, 8)}` : 'ĐỘC LẬP'}
+          {partnerClientId
+            ? `MÃ MÁY: ${partnerClientId.slice(0, 8)}`
+            : "ĐỘC LẬP"}
         </div>
       </div>
     </div>
