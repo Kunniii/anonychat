@@ -587,7 +587,57 @@ const ChatMessage = ({
   onReport
 }) => {
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const [isDelayedSending, setIsDelayedSending] = useState(false);
+  const hideTimeoutRef = useRef(null);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (hideTimeoutRef.current) {
+        clearTimeout(hideTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleMouseEnter = () => {
+    if (hideTimeoutRef.current) {
+      clearTimeout(hideTimeoutRef.current);
+      hideTimeoutRef.current = null;
+    }
+    setIsHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    if (hideTimeoutRef.current) {
+      clearTimeout(hideTimeoutRef.current);
+    }
+    hideTimeoutRef.current = window.setTimeout(() => {
+      setIsHovered(false);
+      setPickerOpen(false);
+    }, 150);
+  };
+
+  const handleFocus = () => {
+    if (hideTimeoutRef.current) {
+      clearTimeout(hideTimeoutRef.current);
+      hideTimeoutRef.current = null;
+    }
+    setIsHovered(true);
+  };
+
+  const handleBlur = (e) => {
+    if (containerRef.current && containerRef.current.contains(e.relatedTarget)) {
+      return;
+    }
+    if (hideTimeoutRef.current) {
+      clearTimeout(hideTimeoutRef.current);
+    }
+    hideTimeoutRef.current = window.setTimeout(() => {
+      setIsHovered(false);
+      setPickerOpen(false);
+    }, 150);
+  };
 
   useEffect(() => {
     if (isMine && !delivered) {
@@ -611,7 +661,14 @@ const ChatMessage = ({
 
   const handleReaction = (emoji) => {
     const sent = onReact({ index, originIndex, author }, emoji);
-    if (sent) setPickerOpen(false);
+    if (sent) {
+      if (hideTimeoutRef.current) {
+        clearTimeout(hideTimeoutRef.current);
+        hideTimeoutRef.current = null;
+      }
+      setIsHovered(false);
+      setPickerOpen(false);
+    }
   };
 
   const formattedTime = timestamp
@@ -619,15 +676,27 @@ const ChatMessage = ({
     : '';
 
   const hasReaction = Boolean(peerReaction || ownReaction);
+  const showPicker = isHovered || pickerOpen;
 
   return (
     <div className={`flex w-full items-start ${isMine ? 'justify-end' : 'justify-start'} ${hasReaction ? 'my-2 mb-4' : 'my-2'}`}>
-      <div className={`group relative flex flex-col ${isMine ? 'items-end' : 'items-start'} max-w-[85%] md:max-w-xl lg:max-w-2xl`}>
+      <div
+        ref={containerRef}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        className={`group relative flex flex-col ${isMine ? 'items-end' : 'items-start'} max-w-[85%] md:max-w-xl lg:max-w-2xl`}
+      >
         {/* Floating reaction picker toolbar */}
         <div
-          className={`absolute -top-11 z-20 flex items-center gap-1 rounded-full border border-white/10 bg-[#121318]/95 p-1 shadow-[0_8px_24px_rgba(0,0,0,0.5)] opacity-0 pointer-events-none transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100 ${
+          className={`absolute -top-11 z-20 flex items-center gap-1 rounded-full border border-white/10 bg-[#121318]/95 p-1 shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-all duration-150 ${
             isMine ? 'right-0' : 'left-0'
-          } ${pickerOpen ? 'pointer-events-auto opacity-100' : ''}`}
+          } ${
+            showPicker
+              ? 'pointer-events-auto opacity-100 translate-y-0 scale-100'
+              : 'pointer-events-none opacity-0 translate-y-1 scale-95'
+          }`}
           role="group"
           aria-label="Chọn cảm xúc"
         >
