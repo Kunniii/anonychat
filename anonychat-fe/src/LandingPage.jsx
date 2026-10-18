@@ -70,6 +70,10 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
       q: "Tính năng gửi góp ý bằng lệnh /admin hoạt động như thế nào?",
       a: "Đây là đường dây trực tiếp kết nối tới đội ngũ phát triển. Trong phòng chat, bạn có thể bấm nút góp ý hoặc gõ /admin để chia sẻ cảm nghĩ, phản ánh lỗi hay đề xuất tính năng mới.",
     },
+    {
+      q: "AnonyChat có tính năng ẩn hay bí mật nào không?",
+      a: "Có tin đồn về một cỗ máy thời gian đưa bạn về thời kỳ Web 1.0 năm 1995 với giao diện Windows 95 xám cổ điển. Nếu bạn biết một từ tiếng Anh mang ý nghĩa 'trường phái cổ điển', hãy thử gõ nó vào khung chat xem điều gì xảy ra...",
+    },
   ];
 
   return (
@@ -609,8 +613,14 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
                   cho dev.
                 </p>
               </div>
-              <div className="mt-6 pt-4 border-t border-white/[0.06] text-xs font-mono-clean text-rose-300/80">
-                Lệnh nhanh: /admin
+              <div className="mt-6 pt-4 border-t border-white/[0.06] flex items-center justify-between text-xs font-mono-clean text-zinc-500">
+                <span className="text-rose-300/80">Lệnh: /admin</span>
+                <span
+                  className="text-zinc-600 hover:text-zinc-400 transition-colors cursor-help"
+                  title="Có một cỗ máy thời gian 1995 bí mật đang chờ bạn khám phá..."
+                >
+                  ✨ Easter egg ẩn
+                </span>
               </div>
             </div>
           </div>

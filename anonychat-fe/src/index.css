@@ -85,6 +85,22 @@ body {
   font-size: 15px;
 }
 
+/* Retro 90s Web 1.0 / Windows 95 Easter Egg Styles */
+.anonychat-retro-root,
+.anonychat-retro-root *,
+.anonychat-retro-root button,
+.anonychat-retro-root input,
+.anonychat-retro-root textarea,
+.anonychat-retro-root select {
+  font-family: 'Courier New', Courier, 'Lucida Console', Monaco, monospace !important;
+  border-radius: 0 !important;
+}
+
+.anonychat-retro-root ::selection {
+  background-color: #000080 !important;
+  color: #ffffff !important;
+}
+
 .ease-spring {
   transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
