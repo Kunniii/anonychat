@@ -1,5 +1,6 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import confetti from 'canvas-confetti';
+import { containsProfanity } from './profanity.js';
 
 const REACTION_EMOJIS = ['❤️', '😂', '😮', '😢', '👍'];
 const ACTIVITY_MILESTONES = [10, 25, 50, 100, 250, 500, 1000];
@@ -820,6 +821,7 @@ const MessageInput = ({ onSendMessage, onTyping, onOpenAdmin, isConnected }) => 
   const [message, setMessage] = useState('');
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const [attachmentError, setAttachmentError] = useState('');
+  const [profanityError, setProfanityError] = useState('');
   const typingTimeoutRef = useRef(null);
   const inputRef = useRef(null);
   const imageInputRef = useRef(null);
@@ -845,6 +847,12 @@ const MessageInput = ({ onSendMessage, onTyping, onOpenAdmin, isConnected }) => 
     if (message.trim().toLowerCase() === '/admin') {
       setMessage('');
       onOpenAdmin();
+      return;
+    }
+
+    setProfanityError('');
+    if (containsProfanity(message)) {
+      setProfanityError('Tin nhắn chứa nội dung không phù hợp.');
       return;
     }
 
@@ -969,6 +977,7 @@ const MessageInput = ({ onSendMessage, onTyping, onOpenAdmin, isConnected }) => 
           value={message}
           onChange={(e) => {
             setMessage(e.target.value);
+            if (profanityError) setProfanityError('');
             handleTyping();
           }}
           onKeyDown={handleKeyDown}
@@ -1023,9 +1032,12 @@ const MessageInput = ({ onSendMessage, onTyping, onOpenAdmin, isConnected }) => 
           </svg>
         </button>
       </div>
-      {(attachmentError || isProcessingImage) && (
-        <p className="px-2 text-[10px] text-zinc-400" role={attachmentError ? 'alert' : 'status'}>
-          {attachmentError || 'Đang chuẩn bị hình ảnh…'}
+      {(attachmentError || profanityError || isProcessingImage) && (
+        <p
+          className={`px-2 text-[10px] ${profanityError ? 'text-rose-400' : 'text-zinc-400'}`}
+          role={attachmentError || profanityError ? 'alert' : 'status'}
+        >
+          {attachmentError || profanityError || 'Đang chuẩn bị hình ảnh…'}
         </p>
       )}
     </div>
