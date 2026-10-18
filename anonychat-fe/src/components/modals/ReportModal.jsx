@@ -76,15 +76,6 @@ export const ReportModal = ({ targetMessage, status, onClose, onSubmit }) => {
           </button>
         </div>
 
-        {targetMessage?.reportedClientId && (
-          <div className="mb-3 rounded-lg border border-rose-500/20 bg-rose-500/5 px-3 py-2 flex items-center justify-between text-[11px] font-mono">
-            <span className="text-zinc-400">UUID Người lạ:</span>
-            <span className="text-rose-300 font-bold truncate max-w-[200px]" title={targetMessage.reportedClientId}>
-              {targetMessage.reportedClientId}
-            </span>
-          </div>
-        )}
-
         <div className="mb-3 rounded-xl border border-zinc-800 bg-zinc-950/70 p-3">
           <p className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">
             Nội dung báo cáo

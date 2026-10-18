@@ -33,6 +33,61 @@ export const MessageInput = ({
     textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
   }, [message]);
 
+  // Focus textarea on mount and whenever connection becomes active
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isConnected]);
+
+  // Listen for global keypress / keydown to automatically focus textarea after 1 keystroke
+  useEffect(() => {
+    const handleGlobalKeyDown = (e) => {
+      if (!inputRef.current) return;
+
+      const activeEl = document.activeElement;
+      if (
+        activeEl === inputRef.current ||
+        activeEl?.tagName === 'INPUT' ||
+        activeEl?.tagName === 'TEXTAREA' ||
+        activeEl?.tagName === 'SELECT' ||
+        activeEl?.isContentEditable
+      ) {
+        return;
+      }
+
+      // Do not hijack focus if any dialog or modal overlay is open
+      if (document.querySelector('[role="dialog"], [aria-modal="true"]')) {
+        return;
+      }
+
+      // Ignore modifiers and non-character control keys
+      if (
+        e.ctrlKey ||
+        e.altKey ||
+        e.metaKey ||
+        e.key === 'Tab' ||
+        e.key === 'Escape' ||
+        e.key === 'Enter' ||
+        e.key === 'Shift' ||
+        e.key === 'Control' ||
+        e.key === 'Alt' ||
+        e.key === 'Meta' ||
+        (e.key.startsWith('F') && e.key.length > 1)
+      ) {
+        return;
+      }
+
+      // On any printable keystroke, focus textarea immediately so it receives input
+      if (e.key.length === 1) {
+        inputRef.current.focus();
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, []);
+
   const handleTyping = () => {
     if (!isConnected) return;
     clearTimeout(typingTimeoutRef.current);
@@ -42,7 +97,7 @@ export const MessageInput = ({
   };
 
   const submitMessage = () => {
-    if (!message.trim() || !isConnected) return;
+    if (!message.trim()) return;
     const trimmed = message.trim().toLowerCase();
     if (trimmed === 'oldschool' || trimmed === '/oldschool') {
       setMessage('');
@@ -102,6 +157,9 @@ export const MessageInput = ({
       onOpenAdmin();
       return;
     }
+
+    // Require active connection to send chat messages
+    if (!isConnected) return;
 
     setProfanityError('');
     if (containsProfanity(message, customBlockWords)) {
@@ -257,10 +315,9 @@ export const MessageInput = ({
               ? 'font-mono text-emerald-200 placeholder:text-emerald-500/50'
               : 'text-zinc-100 placeholder:text-zinc-500'
           }`}
-          placeholder={isConnected ? 'Nhập tin nhắn (gõ /admin để gửi góp ý)...' : 'Đang kết nối...'}
+          placeholder={isConnected ? 'Nhập tin nhắn (gõ /admin để gửi góp ý)...' : 'Đang tìm kiếm người lạ (có thể soạn trước)...'}
           autoComplete="off"
           autoFocus
-          disabled={!isConnected}
         />
         <div className="flex items-center gap-1.5 shrink-0 pb-1">
           {isConnected ? (
