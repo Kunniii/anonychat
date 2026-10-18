@@ -7,3 +7,35 @@ services:
       - .env
     ports:
       - 3030:3000
+    develop:
+      watch:
+        # Backend source files: sync and restart container immediately
+        - action: sync+restart
+          path: ./index.js
+          target: /app/index.js
+        - action: sync+restart
+          path: ./logger.js
+          target: /app/logger.js
+        - action: sync+restart
+          path: ./messageLog.js
+          target: /app/messageLog.js
+        - action: sync+restart
+          path: ./feedbackLog.js
+          target: /app/feedbackLog.js
+        - action: sync+restart
+          path: ./reportLog.js
+          target: /app/reportLog.js
+
+        # Frontend source files: rebuild image on code changes
+        - action: rebuild
+          path: ./anonychat-fe
+          ignore:
+            - anonychat-fe/node_modules/
+
+        # Dependencies and build configuration: trigger full rebuild
+        - action: rebuild
+          path: ./package.json
+        - action: rebuild
+          path: ./yarn.lock
+        - action: rebuild
+          path: ./Dockerfile
