@@ -12,6 +12,7 @@ import FeedbackModal from '../modals/FeedbackModal.jsx';
 import ReportModal from '../modals/ReportModal.jsx';
 import DonationModal from '../modals/DonationModal.jsx';
 import BannedOverlay from '../modals/BannedOverlay.jsx';
+import RetroChatView from './RetroChatView.jsx';
 
 export const ChatApp = ({ onGoHome }) => {
   const { playSound } = useAudio();
@@ -117,9 +118,15 @@ export const ChatApp = ({ onGoHome }) => {
   const [keyboardOffset, setKeyboardOffset] = useState(0);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isDonationOpen, setIsDonationOpen] = useState(false);
+  const [isRetroMode, setIsRetroMode] = useState(false);
   const [easterEggQueue, setEasterEggQueue] = useState([]);
   const lastCelebratedMilestonesRef = useRef({ messages: 0, events: 0 });
   const celebrationRevisionRef = useRef(0);
+
+  const handleToggleRetroMode = useCallback(() => {
+    setIsRetroMode((prev) => !prev);
+    playSound?.('message');
+  }, [playSound]);
 
   useEffect(() => {
     const messageCount = messages.filter(
@@ -317,7 +324,9 @@ export const ChatApp = ({ onGoHome }) => {
 
   return (
     <div
-      className="anonychat-app-root fixed inset-0 flex items-center justify-center overflow-hidden bg-[#08090b] text-zinc-100 font-chat-mono"
+      className={`anonychat-app-root fixed inset-0 flex items-center justify-center overflow-hidden font-chat-mono transition-colors duration-300 ${
+        isRetroMode ? 'anonychat-retro-root bg-[#008080] text-black' : 'bg-[#08090b] text-zinc-100'
+      }`}
       style={{
         height: `${viewportHeight}px`,
         paddingBottom: keyboardOffset > 0 ? 'max(0.75rem, env(safe-area-inset-bottom))' : undefined,
@@ -325,16 +334,18 @@ export const ChatApp = ({ onGoHome }) => {
         justifyContent: keyboardOffset > 0 ? 'flex-start' : 'center'
       }}
     >
-      <div
-        className="pointer-events-none fixed inset-0 z-0 opacity-30"
-        style={{
-          backgroundImage: `
-            radial-gradient(circle at 50% 10%, rgba(255, 255, 255, 0.05) 0%, transparent 60%),
-            radial-gradient(circle at 85% 50%, rgba(110, 231, 183, 0.03) 0%, transparent 50%),
-            radial-gradient(circle at 15% 80%, rgba(147, 197, 253, 0.03) 0%, transparent 50%)
-          `
-        }}
-      />
+      {!isRetroMode && (
+        <div
+          className="pointer-events-none fixed inset-0 z-0 opacity-30"
+          style={{
+            backgroundImage: `
+              radial-gradient(circle at 50% 10%, rgba(255, 255, 255, 0.05) 0%, transparent 60%),
+              radial-gradient(circle at 85% 50%, rgba(110, 231, 183, 0.03) 0%, transparent 50%),
+              radial-gradient(circle at 15% 80%, rgba(147, 197, 253, 0.03) 0%, transparent 50%)
+            `
+          }}
+        />
+      )}
 
       {activeCelebration && (
         <EasterEggCelebration
@@ -355,31 +366,52 @@ export const ChatApp = ({ onGoHome }) => {
         </p>
       </div>
 
-      <ChatContainer>
-        <ChatHeader
-          onlineCount={onlineCount}
-          hasActiveConversation={hasActiveConversation}
-          isUserConnected={isUserConnected}
-          onEndConversation={handleEndConversation}
-          onOpenReport={hasActiveConversation ? handleOpenNavReport : undefined}
-          onOpenDonation={() => setIsDonationOpen(true)}
-          onGoHome={onGoHome}
-        />
-        <ChatLog
-          messages={messages}
-          isUserConnected={isUserConnected}
-          onReact={sendReaction}
-          onReport={handleOpenReport}
-          partnerColor={partnerColor}
-        />
-        <MessageInput
-          onSendMessage={handleSendMessage}
-          onTyping={handleTyping}
-          onOpenAdmin={handleOpenFeedback}
-          isConnected={isUserConnected}
-          customBlockWords={customBlockWords}
-        />
-      </ChatContainer>
+      {isRetroMode ? (
+        <div className="relative z-10 w-full h-full p-0 sm:p-4 flex items-center justify-center">
+          <RetroChatView
+            messages={messages}
+            isUserConnected={isUserConnected}
+            hasActiveConversation={hasActiveConversation}
+            onlineCount={onlineCount}
+            partnerClientId={partnerClientId}
+            partnerColor={partnerColor}
+            onSendMessage={handleSendMessage}
+            onTyping={handleTyping}
+            onEndConversation={handleEndConversation}
+            onOpenReport={hasActiveConversation ? handleOpenNavReport : undefined}
+            onReact={sendReaction}
+            onToggleRetroMode={handleToggleRetroMode}
+            customBlockWords={customBlockWords}
+          />
+        </div>
+      ) : (
+        <ChatContainer>
+          <ChatHeader
+            onlineCount={onlineCount}
+            hasActiveConversation={hasActiveConversation}
+            isUserConnected={isUserConnected}
+            onEndConversation={handleEndConversation}
+            onOpenReport={hasActiveConversation ? handleOpenNavReport : undefined}
+            onOpenDonation={() => setIsDonationOpen(true)}
+            onGoHome={onGoHome}
+          />
+          <ChatLog
+            messages={messages}
+            isUserConnected={isUserConnected}
+            onReact={sendReaction}
+            onReport={handleOpenReport}
+            partnerColor={partnerColor}
+          />
+          <MessageInput
+            onSendMessage={handleSendMessage}
+            onTyping={handleTyping}
+            onOpenAdmin={handleOpenFeedback}
+            onToggleRetroMode={handleToggleRetroMode}
+            isConnected={isUserConnected}
+            customBlockWords={customBlockWords}
+          />
+        </ChatContainer>
+      )}
 
       {isFeedbackOpen && (
         <FeedbackModal

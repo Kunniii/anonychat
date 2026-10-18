@@ -6,6 +6,7 @@ export const MessageInput = ({
   onSendMessage,
   onTyping,
   onOpenAdmin,
+  onToggleRetroMode,
   isConnected,
   customBlockWords = []
 }) => {
@@ -35,7 +36,16 @@ export const MessageInput = ({
 
   const submitMessage = () => {
     if (!message.trim() || !isConnected) return;
-    if (message.trim().toLowerCase() === '/admin') {
+    const trimmed = message.trim().toLowerCase();
+    if (trimmed === 'oldschool' || trimmed === '/oldschool') {
+      setMessage('');
+      if (onToggleRetroMode) {
+        onToggleRetroMode();
+      }
+      return;
+    }
+
+    if (trimmed === '/admin') {
       setMessage('');
       onOpenAdmin();
       return;
