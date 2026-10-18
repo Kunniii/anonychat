@@ -1,5 +1,6 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import confetti from 'canvas-confetti';
+import { containsProfanity } from './profanity.js';
 
 const REACTION_EMOJIS = ['❤️', '😂', '😮', '😢', '👍'];
 const ACTIVITY_MILESTONES = [10, 25, 50, 100, 250, 500, 1000];
@@ -65,6 +66,7 @@ const useWebSocket = (playSound) => {
   const [onlineCount, setOnlineCount] = useState(0);
   const [activityEventCount, setActivityEventCount] = useState(0);
   const [feedbackStatus, setFeedbackStatus] = useState(null);
+  const [customBlockWords, setCustomBlockWords] = useState([]);
   const activityEventCountRef = useRef(0);
   const eventMilestoneTypesRef = useRef(new Map());
   const typingTimeoutRef = useRef(null);
@@ -195,6 +197,11 @@ const useWebSocket = (playSound) => {
 
         if (msg.type === 'config' && Number.isInteger(msg.reconnectGraceSeconds) && msg.reconnectGraceSeconds > 0) {
           reconnectGraceRef.current = msg.reconnectGraceSeconds;
+        }
+
+        if (msg.type === 'blockList' && Array.isArray(msg.words)) {
+          setCustomBlockWords(msg.words.filter((w) => typeof w === 'string' && w.length > 0));
+          return;
         }
 
         if (msg.type === 'image_start') {
@@ -532,7 +539,8 @@ const useWebSocket = (playSound) => {
     clearFeedbackStatus,
     onlineCount,
     activityEventCount,
-    eventMilestoneTypesRef
+    eventMilestoneTypesRef,
+    customBlockWords
   };
 };
 
@@ -546,7 +554,8 @@ const ChatMessage = ({
   index,
   originIndex,
   author,
-  onReact
+  onReact,
+  onReport
 }) => {
   const [pickerOpen, setPickerOpen] = useState(false);
   const selectedReaction = reactions?.self ?? null;
@@ -586,6 +595,17 @@ const ChatMessage = ({
               className="flex h-8 w-8 items-center justify-center rounded-full text-lg text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-100"
             >
               ×
+            </button>
+          )}
+          {!isMine && onReport && (
+            <button
+              type="button"
+              aria-label="Báo cáo tin nhắn"
+              title="Báo cáo nội dung vi phạm"
+              onClick={() => onReport({ text: message || '[ảnh]', image: !!image })}
+              className="flex h-8 w-8 items-center justify-center rounded-full text-sm text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-rose-400"
+            >
+              🚩
             </button>
           )}
         </div>
@@ -750,7 +770,7 @@ const OnlineCounter = ({ count }) => {
   );
 };
 
-const ChatLog = ({ messages, isUserConnected, onReact }) => {
+const ChatLog = ({ messages, isUserConnected, onReact, onReport }) => {
   const logRef = useRef(null);
 
   useLayoutEffect(() => {
@@ -806,6 +826,7 @@ const ChatLog = ({ messages, isUserConnected, onReact }) => {
                   originIndex={msg.originIndex}
                   author={msg.author}
                   onReact={onReact}
+                  onReport={onReport}
                 />
               )}
             </div>
@@ -816,10 +837,11 @@ const ChatLog = ({ messages, isUserConnected, onReact }) => {
   );
 };
 
-const MessageInput = ({ onSendMessage, onTyping, onOpenAdmin, isConnected }) => {
+const MessageInput = ({ onSendMessage, onTyping, onOpenAdmin, isConnected, customBlockWords = [] }) => {
   const [message, setMessage] = useState('');
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const [attachmentError, setAttachmentError] = useState('');
+  const [profanityError, setProfanityError] = useState('');
   const typingTimeoutRef = useRef(null);
   const inputRef = useRef(null);
   const imageInputRef = useRef(null);
@@ -845,6 +867,12 @@ const MessageInput = ({ onSendMessage, onTyping, onOpenAdmin, isConnected }) => 
     if (message.trim().toLowerCase() === '/admin') {
       setMessage('');
       onOpenAdmin();
+      return;
+    }
+
+    setProfanityError('');
+    if (containsProfanity(message, customBlockWords)) {
+      setProfanityError('Tin nhắn chứa nội dung không phù hợp.');
       return;
     }
 
@@ -969,6 +997,7 @@ const MessageInput = ({ onSendMessage, onTyping, onOpenAdmin, isConnected }) => 
           value={message}
           onChange={(e) => {
             setMessage(e.target.value);
+            if (profanityError) setProfanityError('');
             handleTyping();
           }}
           onKeyDown={handleKeyDown}
@@ -1023,9 +1052,12 @@ const MessageInput = ({ onSendMessage, onTyping, onOpenAdmin, isConnected }) => 
           </svg>
         </button>
       </div>
-      {(attachmentError || isProcessingImage) && (
-        <p className="px-2 text-[10px] text-zinc-400" role={attachmentError ? 'alert' : 'status'}>
-          {attachmentError || 'Đang chuẩn bị hình ảnh…'}
+      {(attachmentError || profanityError || isProcessingImage) && (
+        <p
+          className={`px-2 text-[10px] ${profanityError ? 'text-rose-400' : 'text-zinc-400'}`}
+          role={attachmentError || profanityError ? 'alert' : 'status'}
+        >
+          {attachmentError || profanityError || 'Đang chuẩn bị hình ảnh…'}
         </p>
       )}
     </div>
@@ -1122,6 +1154,155 @@ const FeedbackModal = ({ status, onClose, onSubmit }) => {
     </div>
   );
 };
+
+const REPORT_REASONS = [
+  'Từ ngữ thô tục / Xúc phạm',
+  'Quấy rối / Đe dọa',
+  'Nội dung khiêu dâm / Đồi trụy',
+  'Spam / Lừa đảo',
+  'Khác'
+];
+
+const ReportModal = ({ targetMessage, status, onClose, onSubmit }) => {
+  const [selectedReason, setSelectedReason] = useState(REPORT_REASONS[0]);
+  const [customDetail, setCustomDetail] = useState('');
+  const isPending = status?.type === 'pending';
+  const isSent = status?.type === 'success';
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape' && !isPending) onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isPending, onClose]);
+
+  const submit = (event) => {
+    event.preventDefault();
+    if (isPending || isSent) return;
+    const reportedText = targetMessage?.text || (targetMessage?.image ? '[Hình ảnh]' : '');
+    if (!reportedText) return;
+    const reasonText = selectedReason === 'Khác' && customDetail.trim()
+      ? customDetail.trim()
+      : selectedReason + (customDetail.trim() ? `: ${customDetail.trim()}` : '');
+    onSubmit({ reportedText, reason: reasonText });
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget && !isPending) onClose();
+      }}
+    >
+      <form
+        onSubmit={submit}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="report-modal-title"
+        className="w-full max-w-md rounded-2xl border border-zinc-700/80 bg-[#111214] p-5 shadow-[0_12px_48px_rgba(0,0,0,0.35)]"
+      >
+        <div className="mb-4 flex items-start justify-between gap-4">
+          <div>
+            <h2 id="report-modal-title" className="text-sm font-semibold text-zinc-100 flex items-center gap-1.5">
+              <span>🚩</span> Báo cáo nội dung vi phạm
+            </h2>
+            <p className="mt-1 text-xs text-zinc-500">Báo cáo sẽ được gửi tới admin để xử lý và cập nhật bộ lọc từ.</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isPending}
+            className="rounded-md px-2 py-1 text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-zinc-200 disabled:opacity-40"
+            aria-label="Đóng"
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="mb-3 rounded-xl border border-zinc-800 bg-zinc-950/70 p-3">
+          <p className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">Nội dung bị báo cáo</p>
+          <p className="text-xs text-zinc-200 line-clamp-4 break-words">
+            {targetMessage?.text || (targetMessage?.image ? '[Hình ảnh]' : '')}
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          <div>
+            <label className="block text-xs text-zinc-400 mb-1.5 font-medium">Lý do báo cáo</label>
+            <div className="grid grid-cols-1 gap-1.5">
+              {REPORT_REASONS.map((reason) => (
+                <label
+                  key={reason}
+                  className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs cursor-pointer transition-colors ${
+                    selectedReason === reason
+                      ? 'border-rose-500/50 bg-rose-500/10 text-rose-200'
+                      : 'border-zinc-800 bg-zinc-950/40 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="report-reason"
+                    value={reason}
+                    checked={selectedReason === reason}
+                    onChange={() => setSelectedReason(reason)}
+                    className="sr-only"
+                    disabled={isPending || isSent}
+                  />
+                  <span className={`h-1.5 w-1.5 rounded-full ${selectedReason === reason ? 'bg-rose-400' : 'bg-zinc-600'}`} />
+                  <span>{reason}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="report-detail" className="block text-xs text-zinc-400 mb-1">
+              Chi tiết thêm (không bắt buộc)
+            </label>
+            <textarea
+              id="report-detail"
+              value={customDetail}
+              onChange={(e) => setCustomDetail(e.target.value.slice(0, 300))}
+              maxLength={300}
+              rows={2}
+              disabled={isPending || isSent}
+              placeholder="Thêm mô tả hoặc chỉ rõ từ vi phạm nếu cần..."
+              className="w-full resize-none rounded-xl border border-zinc-700/80 bg-zinc-950/70 p-2.5 text-xs text-zinc-100 placeholder:text-zinc-600 focus:border-zinc-500 focus:outline-none disabled:opacity-60"
+            />
+          </div>
+        </div>
+
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <p
+            className={`text-xs ${status?.type === 'error' ? 'text-rose-300' : status?.type === 'success' ? 'text-emerald-300' : 'text-zinc-500'}`}
+            role={status?.type === 'error' ? 'alert' : 'status'}
+          >
+            {status?.message || ''}
+          </p>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={isPending}
+              className="rounded-lg border border-zinc-700 px-3 py-2 text-xs text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-200 disabled:opacity-40"
+            >
+              Hủy
+            </button>
+            <button
+              type="submit"
+              disabled={isPending || isSent}
+              className="rounded-lg bg-rose-500 hover:bg-rose-600 px-3.5 py-2 text-xs font-medium text-white transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {isPending ? 'Đang gửi…' : isSent ? 'Đã gửi' : 'Gửi báo cáo'}
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  );
+};
+
 
 const DonationModal = ({ onClose }) => {
   const closeButtonRef = useRef(null);
@@ -1253,8 +1434,42 @@ const ChatApp = () => {
     eventMilestoneTypesRef,
     sendFeedback,
     feedbackStatus,
-    clearFeedbackStatus
+    clearFeedbackStatus,
+    customBlockWords
   } = useWebSocket(playSound);
+
+  const [reportingMessage, setReportingMessage] = useState(null);
+  const [reportStatus, setReportStatus] = useState(null);
+
+  const handleOpenReport = useCallback((messageData) => {
+    setReportStatus(null);
+    setReportingMessage(messageData);
+  }, []);
+
+  const handleCloseReport = useCallback(() => {
+    setReportingMessage(null);
+    setReportStatus(null);
+  }, []);
+
+  const handleSubmitReport = useCallback(async ({ reportedText, reason }) => {
+    setReportStatus({ type: 'pending', message: 'Đang gửi báo cáo…' });
+    try {
+      const response = await fetch('/api/reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reportedText, reason })
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Không thể gửi báo cáo.');
+      setReportStatus({ type: 'success', message: 'Đã gửi báo cáo vi phạm. Cảm ơn bạn!' });
+      window.setTimeout(() => {
+        setReportingMessage(null);
+        setReportStatus(null);
+      }, 1800);
+    } catch (err) {
+      setReportStatus({ type: 'error', message: err.message || 'Lỗi khi gửi báo cáo.' });
+    }
+  }, []);
 
   useEffect(() => {
     const pageTitle = 'AnonyChat | Anonymous Chat with Strangers Online';
@@ -1512,12 +1727,18 @@ const ChatApp = () => {
           onEndConversation={handleEndConversation}
           onOpenDonation={() => setIsDonationOpen(true)}
         />
-        <ChatLog messages={messages} isUserConnected={isUserConnected} onReact={sendReaction} />
+        <ChatLog
+          messages={messages}
+          isUserConnected={isUserConnected}
+          onReact={sendReaction}
+          onReport={handleOpenReport}
+        />
         <MessageInput
           onSendMessage={handleSendMessage}
           onTyping={handleTyping}
           onOpenAdmin={handleOpenFeedback}
           isConnected={isUserConnected}
+          customBlockWords={customBlockWords}
         />
       </ChatContainer>
       {isFeedbackOpen && (
@@ -1525,6 +1746,14 @@ const ChatApp = () => {
           status={feedbackStatus}
           onClose={handleCloseFeedback}
           onSubmit={handleSubmitFeedback}
+        />
+      )}
+      {reportingMessage && (
+        <ReportModal
+          targetMessage={reportingMessage}
+          status={reportStatus}
+          onClose={handleCloseReport}
+          onSubmit={handleSubmitReport}
         />
       )}
       {isDonationOpen && <DonationModal onClose={handleCloseDonation} />}
@@ -1543,6 +1772,19 @@ const AdminConsole = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [adminStats, setAdminStats] = useState(null);
   const [isAdminStatsLoading, setIsAdminStatsLoading] = useState(false);
+
+  // Reports state
+  const [reports, setReports] = useState([]);
+  const [isReportsLoading, setIsReportsLoading] = useState(false);
+  const [reportsError, setReportsError] = useState('');
+  const [reportFilter, setReportFilter] = useState('pending'); // 'pending' | 'all' | 'resolved'
+  const [resolvingReportId, setResolvingReportId] = useState('');
+  const [activeBlockInputs, setActiveBlockInputs] = useState({});
+
+  // Block list state
+  const [blockList, setBlockList] = useState([]);
+  const [isBlockListLoading, setIsBlockListLoading] = useState(false);
+  const [newBlockWord, setNewBlockWord] = useState('');
 
   const loadAdminStats = async (adminToken) => {
     setIsAdminStatsLoading(true);
@@ -1579,6 +1821,41 @@ const AdminConsole = () => {
     }
   };
 
+  const loadReports = async (adminToken) => {
+    setIsReportsLoading(true);
+    setReportsError('');
+    try {
+      const response = await fetch('/api/admin/reports', {
+        headers: { Authorization: `Bearer ${adminToken}` }
+      });
+      const result = await response.json();
+      if (response.status === 401) setToken('');
+      if (!response.ok) throw new Error(result.error || 'Không thể tải báo cáo.');
+      setReports(result.reports || []);
+    } catch (error) {
+      setReportsError(error.message || 'Không thể kết nối tới server.');
+    } finally {
+      setIsReportsLoading(false);
+    }
+  };
+
+  const loadBlockList = async (adminToken) => {
+    setIsBlockListLoading(true);
+    try {
+      const response = await fetch('/api/admin/block-list', {
+        headers: { Authorization: `Bearer ${adminToken}` }
+      });
+      const result = await response.json();
+      if (response.status === 401) setToken('');
+      if (!response.ok) return;
+      setBlockList(result.blockList || []);
+    } catch {
+      // ignore
+    } finally {
+      setIsBlockListLoading(false);
+    }
+  };
+
   const handleLogin = async (event) => {
     event.preventDefault();
     setIsSubmitting(true);
@@ -1596,7 +1873,12 @@ const AdminConsole = () => {
       setToken(result.token);
       setPassword('');
       setStatus({ type: 'success', message: 'Đã đăng nhập. Phiên admin hết hạn sau 8 giờ.' });
-      await Promise.all([loadFeedback(result.token), loadAdminStats(result.token)]);
+      await Promise.all([
+        loadFeedback(result.token),
+        loadAdminStats(result.token),
+        loadReports(result.token),
+        loadBlockList(result.token)
+      ]);
     } catch (error) {
       setStatus({ type: 'error', message: error.message || 'Không thể kết nối tới server.' });
     } finally {
@@ -1636,6 +1918,82 @@ const AdminConsole = () => {
     }
   };
 
+  const handleAddBlockWord = async (wordToAdd) => {
+    const word = (wordToAdd || newBlockWord).trim().toLowerCase();
+    if (!word || !token) return;
+    try {
+      const response = await fetch('/api/admin/block-list', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ word })
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Không thể thêm từ.');
+      setBlockList(result.blockList || []);
+      setNewBlockWord('');
+      setStatus({ type: 'success', message: `Đã thêm từ "${word}" vào danh sách chặn.` });
+    } catch (error) {
+      setStatus({ type: 'error', message: error.message || 'Không thể thêm từ.' });
+    }
+  };
+
+  const handleRemoveBlockWord = async (wordToRemove) => {
+    if (!wordToRemove || !token) return;
+    try {
+      const response = await fetch(`/api/admin/block-list/${encodeURIComponent(wordToRemove)}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Không thể xóa từ.');
+      setBlockList(result.blockList || []);
+      setStatus({ type: 'success', message: `Đã xóa từ "${wordToRemove}" khỏi danh sách chặn.` });
+    } catch (error) {
+      setStatus({ type: 'error', message: error.message || 'Không thể xóa từ.' });
+    }
+  };
+
+  const handleResolveReport = async (reportId, action = 'resolved', blockWord = '') => {
+    if (!reportId || !token) return;
+    setResolvingReportId(reportId);
+    try {
+      const response = await fetch(`/api/admin/reports/${encodeURIComponent(reportId)}/resolve`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ action, blockWord: blockWord.trim().toLowerCase() })
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Không thể xử lý báo cáo.');
+      if (result.blockList) setBlockList(result.blockList);
+      setReports((prev) =>
+        prev.map((r) =>
+          r.id === reportId ? { ...r, resolved: true, resolution: result.resolution } : r
+        )
+      );
+      setActiveBlockInputs((prev) => {
+        const next = { ...prev };
+        delete next[reportId];
+        return next;
+      });
+      setStatus({
+        type: 'success',
+        message: blockWord
+          ? `Đã chặn từ "${blockWord}" và đánh dấu báo cáo đã xử lý.`
+          : 'Đã đánh dấu báo cáo đã xử lý.'
+      });
+    } catch (error) {
+      setStatus({ type: 'error', message: error.message || 'Không thể xử lý báo cáo.' });
+    } finally {
+      setResolvingReportId('');
+    }
+  };
+
   const handleLogout = async () => {
     setIsSubmitting(true);
     try {
@@ -1660,15 +2018,22 @@ const AdminConsole = () => {
     }
   };
 
+  const pendingReportsCount = reports.filter((r) => !r.resolved).length;
+  const filteredReports = reports.filter((r) => {
+    if (reportFilter === 'pending') return !r.resolved;
+    if (reportFilter === 'resolved') return r.resolved;
+    return true;
+  });
+
   return (
     <main className="fixed inset-0 flex items-center justify-center overflow-y-auto bg-[#08090b] px-4 py-8 text-zinc-100">
-      <section className="w-full max-w-lg rounded-2xl border border-zinc-800 bg-[#111214] p-5 sm:p-7">
+      <section className="w-full max-w-2xl rounded-2xl border border-zinc-800 bg-[#111214] p-5 sm:p-7">
         <a href="/" className="text-xs text-zinc-400 transition-colors hover:text-zinc-100">
           ← Quay lại chat
         </a>
         <h1 className="mt-6 text-xl font-semibold">Admin console</h1>
         <p className="mt-2 rounded-lg border border-amber-300/15 bg-amber-300/5 px-3 py-2.5 text-xs leading-relaxed text-amber-100/80">
-          Admin có thể gửi thông báo hệ thống và xem góp ý người dùng chủ động gửi. Admin không thể xem tin nhắn hay nội dung trò chuyện riêng tư.
+          Admin có thể quản lý danh sách từ cấm, xử lý các báo cáo vi phạm, gửi thông báo hệ thống và xem thống kê.
         </p>
 
         {!token ? (
@@ -1704,7 +2069,7 @@ const AdminConsole = () => {
               value={message}
               onChange={(event) => setMessage(event.target.value.slice(0, 1000))}
               maxLength={1000}
-              rows={5}
+              rows={4}
               required
               disabled={isSubmitting}
               placeholder="Viết thông báo sẽ hiển thị cho mọi người đang online…"
@@ -1727,20 +2092,22 @@ const AdminConsole = () => {
           <section className="mt-8 border-t border-zinc-800 pt-6" aria-labelledby="admin-stats-title">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <h2 id="admin-stats-title" className="text-sm font-medium text-zinc-100">Thống kê hệ thống (Nội bộ)</h2>
-                <p className="mt-1 text-[10px] text-zinc-500">Chỉ admin đăng nhập mới xem được thông số này</p>
+                <h2 id="admin-stats-title" className="text-sm font-medium text-zinc-100">
+                  Thống kê hệ thống
+                </h2>
+                <p className="mt-0.5 text-[10px] text-zinc-500">Chỉ admin đăng nhập mới xem được thông số này</p>
               </div>
               <button
                 type="button"
                 onClick={() => loadAdminStats(token)}
                 disabled={isAdminStatsLoading}
-                className="rounded-lg border border-zinc-700 px-3 py-2 text-xs text-zinc-300 transition-colors hover:bg-zinc-800 disabled:opacity-50"
+                className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 transition-colors hover:bg-zinc-800 disabled:opacity-50"
               >
                 {isAdminStatsLoading ? 'Đang tải…' : 'Làm mới'}
               </button>
             </div>
             {adminStats && (
-              <div className="mt-4 grid grid-cols-3 gap-2.5">
+              <div className="mt-3 grid grid-cols-3 gap-2.5">
                 <div className="rounded-xl border border-zinc-800 bg-zinc-950/70 p-3">
                   <p className="text-[10px] uppercase tracking-wider text-zinc-400">Trực tuyến</p>
                   <p className="mt-1 text-xl font-semibold text-emerald-400">{adminStats.onlineCount ?? 0}</p>
@@ -1760,30 +2127,310 @@ const AdminConsole = () => {
           </section>
         )}
 
+        {/* ── Báo cáo vi phạm (Reports) ── */}
+        {token && (
+          <section className="mt-8 border-t border-zinc-800 pt-6" aria-labelledby="admin-reports-title">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <h2 id="admin-reports-title" className="text-sm font-medium text-zinc-100 flex items-center gap-2">
+                  <span>🚩</span> Báo cáo vi phạm
+                </h2>
+                {pendingReportsCount > 0 && (
+                  <span className="rounded-full bg-rose-500/20 px-2 py-0.5 text-[10px] font-semibold text-rose-300">
+                    {pendingReportsCount} chờ xử lý
+                  </span>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => loadReports(token)}
+                disabled={isReportsLoading}
+                className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 transition-colors hover:bg-zinc-800 disabled:opacity-50"
+              >
+                {isReportsLoading ? 'Đang tải…' : 'Làm mới'}
+              </button>
+            </div>
+
+            {/* Filter buttons */}
+            <div className="mt-3 flex items-center gap-2 border-b border-zinc-800 pb-3 text-xs">
+              <button
+                type="button"
+                onClick={() => setReportFilter('pending')}
+                className={`rounded-lg px-2.5 py-1 transition-colors ${
+                  reportFilter === 'pending'
+                    ? 'bg-zinc-200 font-medium text-zinc-950'
+                    : 'text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                Chờ xử lý ({pendingReportsCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setReportFilter('all')}
+                className={`rounded-lg px-2.5 py-1 transition-colors ${
+                  reportFilter === 'all'
+                    ? 'bg-zinc-200 font-medium text-zinc-950'
+                    : 'text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                Tất cả ({reports.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setReportFilter('resolved')}
+                className={`rounded-lg px-2.5 py-1 transition-colors ${
+                  reportFilter === 'resolved'
+                    ? 'bg-zinc-200 font-medium text-zinc-950'
+                    : 'text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                Đã xử lý ({reports.length - pendingReportsCount})
+              </button>
+            </div>
+
+            {reportsError && (
+              <p className="mt-3 text-xs text-rose-300" role="alert">
+                {reportsError}
+              </p>
+            )}
+
+            {!reportsError && !isReportsLoading && filteredReports.length === 0 && (
+              <p className="mt-4 text-xs text-zinc-500">
+                {reportFilter === 'pending'
+                  ? 'Tuyệt vời! Không có báo cáo nào đang chờ xử lý.'
+                  : 'Chưa có báo cáo nào.'}
+              </p>
+            )}
+
+            {filteredReports.length > 0 && (
+              <ol className="mt-4 max-h-[28rem] space-y-3 overflow-y-auto pr-1">
+                {filteredReports.map((report) => {
+                  const isResolving = resolvingReportId === report.id;
+                  const currentInput = activeBlockInputs[report.id] ?? '';
+
+                  return (
+                    <li
+                      key={report.id}
+                      className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3.5 space-y-2.5"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="rounded-md bg-rose-500/10 px-2 py-0.5 text-[10px] font-medium text-rose-300">
+                            {report.reason || 'Báo cáo vi phạm'}
+                          </span>
+                          {report.resolved ? (
+                            <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
+                              ✓ Đã xử lý
+                            </span>
+                          ) : (
+                            <span className="rounded-md bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-300">
+                              Chờ xử lý
+                            </span>
+                          )}
+                        </div>
+                        <time className="text-[10px] text-zinc-500" dateTime={report.timestamp}>
+                          {new Date(report.timestamp).toLocaleString()}
+                        </time>
+                      </div>
+
+                      {/* Reported text quote box */}
+                      <div className="rounded-lg border border-zinc-800/90 bg-[#0d0e10] p-2.5">
+                        <p className="text-[10px] text-zinc-500 mb-0.5 uppercase tracking-wider">Tin nhắn bị báo cáo:</p>
+                        <p className="whitespace-pre-wrap break-words text-xs text-zinc-200 select-all font-sans">
+                          {report.reportedText}
+                        </p>
+                      </div>
+
+                      {/* Resolution status / Actions */}
+                      {report.resolved ? (
+                        <div className="text-[11px] text-zinc-500 flex items-center gap-2">
+                          <span>Đã xử lý lúc {new Date(report.resolution?.resolvedAt || report.timestamp).toLocaleTimeString()}</span>
+                          {report.resolution?.blockWord && (
+                            <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-zinc-300 font-mono text-[10px]">
+                              Đã chặn từ: "{report.resolution.blockWord}"
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="space-y-2 pt-1 border-t border-zinc-800/60">
+                          {activeBlockInputs[report.id] !== undefined ? (
+                            <div className="flex flex-wrap items-center gap-2">
+                              <input
+                                type="text"
+                                value={currentInput}
+                                onChange={(e) =>
+                                  setActiveBlockInputs((prev) => ({
+                                    ...prev,
+                                    [report.id]: e.target.value
+                                  }))
+                                }
+                                placeholder="Nhập từ hoặc cụm từ vi phạm để chặn..."
+                                className="flex-1 min-w-[160px] rounded-lg border border-zinc-700 bg-zinc-900 px-2.5 py-1.5 text-xs text-zinc-100 placeholder:text-zinc-600 focus:border-rose-500 focus:outline-none"
+                              />
+                              <button
+                                type="button"
+                                disabled={!currentInput.trim() || isResolving}
+                                onClick={() => handleResolveReport(report.id, 'blocked', currentInput.trim())}
+                                className="rounded-lg bg-rose-500 hover:bg-rose-600 px-3 py-1.5 text-xs font-medium text-white transition-colors disabled:opacity-50"
+                              >
+                                {isResolving ? 'Đang chặn…' : 'Xác nhận chặn & Đóng'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setActiveBlockInputs((prev) => {
+                                    const next = { ...prev };
+                                    delete next[report.id];
+                                    return next;
+                                  })
+                                }
+                                className="rounded-lg border border-zinc-700 px-2.5 py-1.5 text-xs text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+                              >
+                                Hủy
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex flex-wrap items-center gap-2">
+                              <button
+                                type="button"
+                                disabled={isResolving}
+                                onClick={() =>
+                                  setActiveBlockInputs((prev) => ({
+                                    ...prev,
+                                    [report.id]: report.reportedText.length <= 40 ? report.reportedText.trim() : ''
+                                  }))
+                                }
+                                className="rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-1.5 text-xs font-medium text-rose-300 transition-colors hover:bg-rose-500/20 disabled:opacity-50"
+                              >
+                                ＋ Chặn từ vi phạm
+                              </button>
+                              <button
+                                type="button"
+                                disabled={isResolving}
+                                onClick={() => handleResolveReport(report.id, 'dismissed')}
+                                className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-200 disabled:opacity-50"
+                              >
+                                Bỏ qua / Đã xem
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </li>
+                  );
+                })}
+              </ol>
+            )}
+          </section>
+        )}
+
+        {/* ── Quản lý từ chặn (Block list) ── */}
+        {token && (
+          <section className="mt-8 border-t border-zinc-800 pt-6" aria-labelledby="admin-blocklist-title">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2 id="admin-blocklist-title" className="text-sm font-medium text-zinc-100 flex items-center gap-2">
+                  <span>🚫</span> Danh sách từ chặn tùy chỉnh
+                  <span className="text-xs text-zinc-500 font-normal">({blockList.length} từ)</span>
+                </h2>
+                <p className="mt-0.5 text-[10px] text-zinc-500">
+                  Các từ này tự động đồng bộ tức thì tới tất cả người chat và bị chặn gửi.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => loadBlockList(token)}
+                disabled={isBlockListLoading}
+                className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 transition-colors hover:bg-zinc-800 disabled:opacity-50"
+              >
+                {isBlockListLoading ? 'Đang tải…' : 'Làm mới'}
+              </button>
+            </div>
+
+            {/* Form thêm từ mới */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleAddBlockWord();
+              }}
+              className="mt-3 flex items-center gap-2"
+            >
+              <input
+                type="text"
+                value={newBlockWord}
+                onChange={(e) => setNewBlockWord(e.target.value)}
+                placeholder="Nhập từ hoặc cụm từ mới để chặn..."
+                className="flex-1 rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-600 focus:border-zinc-500 focus:outline-none"
+              />
+              <button
+                type="submit"
+                disabled={!newBlockWord.trim()}
+                className="rounded-lg bg-zinc-100 px-3.5 py-2 text-xs font-medium text-zinc-900 transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-40 shrink-0"
+              >
+                + Thêm từ
+              </button>
+            </form>
+
+            {/* Danh sách từ hiện tại */}
+            <div className="mt-3 max-h-48 overflow-y-auto rounded-xl border border-zinc-800/80 bg-zinc-950/40 p-3">
+              {blockList.length === 0 ? (
+                <p className="text-xs text-zinc-500 italic">
+                  Chưa có từ chặn tùy chỉnh nào (bộ lọc mặc định ~200 từ vẫn hoạt động bình thường).
+                </p>
+              ) : (
+                <div className="flex flex-wrap gap-1.5">
+                  {blockList.map((word) => (
+                    <span
+                      key={word}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-800 bg-zinc-900/90 px-2.5 py-1 text-xs text-zinc-200"
+                    >
+                      <span>{word}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveBlockWord(word)}
+                        className="text-zinc-500 hover:text-rose-400 font-bold transition-colors"
+                        title={`Xóa từ "${word}" khỏi danh sách chặn`}
+                        aria-label={`Xóa từ "${word}"`}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
+        {/* ── Góp ý người dùng ── */}
         {token && (
           <section className="mt-8 border-t border-zinc-800 pt-6" aria-labelledby="admin-feedback-title">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <h2 id="admin-feedback-title" className="text-sm font-medium text-zinc-100">Góp ý người dùng</h2>
-                <p className="mt-1 text-[10px] text-zinc-500">Tối đa 100 góp ý gần nhất</p>
+                <h2 id="admin-feedback-title" className="text-sm font-medium text-zinc-100">
+                  Góp ý người dùng
+                </h2>
+                <p className="mt-0.5 text-[10px] text-zinc-500">Tối đa 100 góp ý gần nhất</p>
               </div>
               <button
                 type="button"
                 onClick={() => loadFeedback(token)}
                 disabled={isFeedbackLoading}
-                className="rounded-lg border border-zinc-700 px-3 py-2 text-xs text-zinc-300 transition-colors hover:bg-zinc-800 disabled:opacity-50"
+                className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 transition-colors hover:bg-zinc-800 disabled:opacity-50"
               >
                 {isFeedbackLoading ? 'Đang tải…' : 'Làm mới'}
               </button>
             </div>
             {feedbackError && (
-              <p className="mt-3 text-xs text-rose-300" role="alert">{feedbackError}</p>
+              <p className="mt-3 text-xs text-rose-300" role="alert">
+                {feedbackError}
+              </p>
             )}
             {!feedbackError && !isFeedbackLoading && feedbackEntries.length === 0 && (
               <p className="mt-4 text-xs text-zinc-500">Chưa có góp ý nào.</p>
             )}
             {feedbackEntries.length > 0 && (
-              <ol className="mt-4 max-h-96 space-y-3 overflow-y-auto pr-1">
+              <ol className="mt-4 max-h-80 space-y-3 overflow-y-auto pr-1">
                 {feedbackEntries.map((entry, index) => (
                   <li
                     key={`${entry.timestamp}-${index}`}
@@ -1821,7 +2468,7 @@ const AdminConsole = () => {
             type="button"
             onClick={handleLogout}
             disabled={isSubmitting}
-            className="mt-5 text-xs text-zinc-500 underline decoration-zinc-700 underline-offset-4 hover:text-zinc-300 disabled:opacity-50"
+            className="mt-6 text-xs text-zinc-500 underline decoration-zinc-700 underline-offset-4 hover:text-zinc-300 disabled:opacity-50"
           >
             Đăng xuất admin
           </button>
