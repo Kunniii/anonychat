@@ -204,15 +204,15 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
         <div className="mt-14 relative mx-auto max-w-4xl rounded-[2rem] p-1.5 sm:p-2 bg-white/[0.04] ring-1 ring-white/[0.1] shadow-[0_24px_80px_rgba(0,0,0,0.6)] overflow-hidden group">
           <div className="relative rounded-[calc(2rem-0.375rem)] overflow-hidden bg-[#0a0b0f] aspect-[16/9] border border-white/[0.06]">
             <img
-              src="/images/hero-visual.jpg"
-              alt="AnonyChat - Kết nối ngẫu nhiên, sẻ chia ẩn danh"
+              src="/images/hero-experience.jpg"
+              alt="AnonyChat - Kết nối ngẫu nhiên, sẻ chia ẩn danh thuần khiết"
               className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02]"
               loading="eager"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#08090c]/80 via-transparent to-transparent pointer-events-none" />
             <div className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6 flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-xs font-mono-clean text-zinc-300 shadow-lg">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Encrypted Stream // 100% Anonymous 1-on-1</span>
+              <span>Khoảng lặng kết nối • 100% Ẩn danh &amp; An yên</span>
             </div>
           </div>
         </div>
@@ -487,8 +487,8 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
                 </p>
                 <div className="relative mt-5 rounded-2xl overflow-hidden border border-white/[0.08] aspect-[16/9] bg-black/40 group">
                   <img
-                    src="/images/instant-match.jpg"
-                    alt="Ghép cặp 1-1 thần tốc"
+                    src="/images/instant-connection.jpg"
+                    alt="Kết nối tự nhiên và chân thật"
                     className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
                     loading="lazy"
                   />
@@ -521,8 +521,8 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
                 </p>
                 <div className="relative mt-5 rounded-2xl overflow-hidden border border-white/[0.08] aspect-[16/11] bg-black/40 group">
                   <img
-                    src="/images/privacy-shield.jpg"
-                    alt="Tuyệt đối riêng tư 0-byte lưu vết"
+                    src="/images/privacy-mindfulness.jpg"
+                    alt="Tuyệt đối riêng tư, khởi đầu nhẹ nhõm không vướng bận"
                     className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
                     loading="lazy"
                   />
@@ -750,7 +750,7 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
             {/* Left: Atmospheric Visual */}
             <div className="w-full md:w-3/5 aspect-[16/10] md:aspect-auto md:h-[420px] relative overflow-hidden group">
               <img
-                src="/images/night-sanctuary.jpg"
+                src="/images/cozy-sanctuary.jpg"
                 alt="Không gian tâm sự đêm muộn ấm áp và lắng đọng"
                 className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
                 loading="lazy"
