@@ -8,6 +8,16 @@ import { appendMessageLog } from './messageLog.js';
 import { appendFeedbackLog } from './feedbackLog.js';
 import { createAppRouter } from './routes/index.js';
 import { errorHandler } from './middlewares/errorHandler.js';
+import {
+  initSessionDb,
+  saveSession,
+  deleteSession,
+  loadActiveSessions,
+  saveBlockedPair,
+  deleteBlockedPair,
+  loadActiveBlockedPairs,
+  closeSessionDb
+} from './sessionStore.js';
 
 const app = express();
 const publicDirectory = path.resolve('public');
@@ -158,6 +168,11 @@ function pair(a, b) {
   b.session.partnerId = a.session.clientId;
   a.session.waiting = false;
   b.session.waiting = false;
+  a.session.lastSeenAt = Date.now();
+  b.session.lastSeenAt = Date.now();
+
+  saveSession(a.session);
+  saveSession(b.session);
 
   chatLogger.usersPaired(a.id, b.id);
   return true;
@@ -175,6 +190,7 @@ function isPairBlocked(clientIdA, clientIdB) {
 
   clearTimeout(block.timer);
   blockedPairs.delete(key);
+  deleteBlockedPair(key);
   return false;
 }
 
@@ -184,11 +200,13 @@ function blockPair(clientIdA, clientIdB) {
   if (existingBlock) clearTimeout(existingBlock.timer);
 
   const expiresAt = Date.now() + PAIR_REMATCH_COOLDOWN_MS;
+  saveBlockedPair(key, expiresAt);
   const timer = setTimeout(() => {
     const currentBlock = blockedPairs.get(key);
     if (currentBlock?.expiresAt !== expiresAt) return;
 
     blockedPairs.delete(key);
+    deleteBlockedPair(key);
     matchWaiting();
     updateConnectionStats();
   }, PAIR_REMATCH_COOLDOWN_MS);
@@ -256,6 +274,7 @@ function expireSession(session) {
   if (clients.get(session.clientId) !== session || session.ws) return;
 
   clients.delete(session.clientId);
+  deleteSession(session.clientId);
   session.reconnectTimer = null;
 
   if (session.partnerId) {
@@ -264,6 +283,7 @@ function expireSession(session) {
 
     if (partnerSession?.partnerId === session.clientId) {
       partnerSession.partnerId = null;
+      saveSession(partnerSession);
       const partner = partnerSession.ws;
 
       if (partner && partner.readyState === partner.OPEN) {
@@ -302,6 +322,8 @@ function disconnect(ws) {
   }
 
   session.ws = null;
+  session.lastSeenAt = Date.now();
+  saveSession(session);
   chatLogger.userDisconnected(ws.id, 'connection_lost');
 
   const waitingIndex = waiting.indexOf(ws);
@@ -335,6 +357,8 @@ function enqueueSession(session, position = waiting.length) {
   waiting.splice(Math.min(position, waiting.length), 0, ws);
   session.waiting = true;
   session.queuedPosition = null;
+  session.lastSeenAt = Date.now();
+  saveSession(session);
   chatLogger.userWaiting(ws.id);
 }
 
@@ -364,6 +388,11 @@ function endConversation(ws) {
     partnerSession.reconnectTimer = null;
     partnerSession.waiting = false;
     partnerSession.queuedPosition = null;
+  }
+
+  saveSession(session);
+  if (partnerSession) {
+    saveSession(partnerSession);
   }
 
   chatLogger.pairDisconnected(session.clientId, partnerSession.clientId, 'ended_by_user');
@@ -426,6 +455,53 @@ function handleBinaryChunk(ws, data) {
   }
 }
 
+// Initialize SQLite session store and restore state
+initSessionDb();
+
+const restoredBlockedPairs = loadActiveBlockedPairs();
+restoredBlockedPairs.forEach(({ pairKey: key, expiresAt }) => {
+  const remainingMs = expiresAt - Date.now();
+  if (remainingMs > 0) {
+    const timer = setTimeout(() => {
+      const currentBlock = blockedPairs.get(key);
+      if (currentBlock?.expiresAt !== expiresAt) return;
+      blockedPairs.delete(key);
+      deleteBlockedPair(key);
+      matchWaiting();
+      updateConnectionStats();
+    }, remainingMs);
+    timer.unref();
+    blockedPairs.set(key, { expiresAt, timer });
+  } else {
+    deleteBlockedPair(key);
+  }
+});
+
+const restoredSessions = loadActiveSessions(RECONNECT_GRACE_MS);
+restoredSessions.forEach((stored) => {
+  const session = {
+    clientId: stored.clientId,
+    ws: null,
+    partnerId: stored.partnerId,
+    reconnectTimer: null,
+    waiting: stored.waiting,
+    queuedPosition: stored.queuedPosition,
+    lastSeenAt: stored.lastSeenAt,
+    createdAt: stored.createdAt
+  };
+
+  const elapsedMs = Date.now() - (stored.lastSeenAt || Date.now());
+  const remainingGraceMs = Math.max(1000, RECONNECT_GRACE_MS - elapsedMs);
+  session.reconnectTimer = setTimeout(() => expireSession(session), remainingGraceMs);
+  session.reconnectTimer.unref();
+
+  clients.set(stored.clientId, session);
+});
+if (restoredSessions.length > 0) {
+  chatLogger.info?.(`Restored ${restoredSessions.length} chat sessions from SQLite database.`);
+  console.log(`[SQLite] Restored ${restoredSessions.length} sessions and ${restoredBlockedPairs.length} blocked pairs.`);
+}
+
 wss.on('connection', (ws, request) => {
   const clientId = new URL(request.url, 'http://localhost').searchParams.get('clientId');
   if (!clientId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(clientId)) {
@@ -439,6 +515,7 @@ wss.on('connection', (ws, request) => {
 
   if (session) {
     clearTimeout(session.reconnectTimer);
+    session.reconnectTimer = null;
 
     if (session.ws) {
       const previousSocket = session.ws;
@@ -460,13 +537,17 @@ wss.on('connection', (ws, request) => {
       partnerId: null,
       reconnectTimer: null,
       waiting: false,
-      queuedPosition: null
+      queuedPosition: null,
+      lastSeenAt: Date.now(),
+      createdAt: Date.now()
     };
     clients.set(clientId, session);
   }
 
   session.ws = ws;
+  session.lastSeenAt = Date.now();
   ws.session = session;
+  saveSession(session);
   connections.add(ws);
   ws.isAlive = true;
   ws.missedHeartbeats = 0;
@@ -692,6 +773,14 @@ wss.on('connection', (ws, request) => {
     }
 
     if (isTextMessage || imageBytes) {
+      if (!ws.partner || ws.partner.readyState !== ws.partner.OPEN) {
+        safeSend(ws, {
+          system: '[SYSTEM] Stranger connection lost. Reconnecting…',
+          reconnectSeconds: reconnectGraceSeconds
+        });
+        return;
+      }
+
       const messageId = typeof msg.id === 'string' && msg.id.length <= 100
         ? msg.id
         : `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -812,9 +901,12 @@ function shutdown() {
   clients.forEach((session) => {
     clearTimeout(session.reconnectTimer);
     session.reconnectTimer = null;
+    session.lastSeenAt = Date.now();
+    saveSession(session);
   });
   blockedPairs.forEach((block) => clearTimeout(block.timer));
   blockedPairs.clear();
+  closeSessionDb();
 
   server.close();
   wss.clients.forEach((ws) => ws.close(1001, 'Server shutting down'));

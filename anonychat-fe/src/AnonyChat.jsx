@@ -84,13 +84,53 @@ const useAudio = () => {
 const useWebSocket = (playSound) => {
   const [ws, setWs] = useState(null);
   const [isUserConnected, setIsUserConnected] = useState(false);
-  const [hasActiveConversation, setHasActiveConversation] = useState(false);
-  const [messages, setMessages] = useState([]);
+  const [hasActiveConversation, setHasActiveConversation] = useState(() => {
+    try {
+      const saved = window.sessionStorage.getItem('anonychat-active-messages');
+      return Boolean(saved && JSON.parse(saved).length > 0);
+    } catch {
+      return false;
+    }
+  });
+  const [messages, setMessages] = useState(() => {
+    try {
+      const saved = window.sessionStorage.getItem('anonychat-active-messages');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
   const [onlineCount, setOnlineCount] = useState(0);
   const [activityEventCount, setActivityEventCount] = useState(0);
   const [feedbackStatus, setFeedbackStatus] = useState(null);
   const [customBlockWords, setCustomBlockWords] = useState([]);
-  const [partnerColor, setPartnerColor] = useState(getRandomPartnerColor);
+  const [partnerColor, setPartnerColor] = useState(() => {
+    try {
+      const saved = window.sessionStorage.getItem('anonychat-partner-color');
+      if (saved && PARTNER_COLORS.includes(saved)) return saved;
+    } catch {}
+    return getRandomPartnerColor();
+  });
+
+  useEffect(() => {
+    try {
+      if (messages.length > 0) {
+        window.sessionStorage.setItem('anonychat-active-messages', JSON.stringify(messages));
+      } else {
+        window.sessionStorage.removeItem('anonychat-active-messages');
+      }
+    } catch (e) {
+      console.warn('Failed to cache messages to sessionStorage:', e);
+    }
+  }, [messages]);
+
+  useEffect(() => {
+    try {
+      if (partnerColor) {
+        window.sessionStorage.setItem('anonychat-partner-color', partnerColor);
+      }
+    } catch {}
+  }, [partnerColor]);
   const activityEventCountRef = useRef(0);
   const eventMilestoneTypesRef = useRef(new Map());
   const typingTimeoutRef = useRef(null);
@@ -327,7 +367,10 @@ const useWebSocket = (playSound) => {
           setHasActiveConversation(true);
           if (!isReconnecting) {
             setMessages([]);
-            setPartnerColor(getRandomPartnerColor());
+            window.sessionStorage.removeItem('anonychat-active-messages');
+            const newColor = getRandomPartnerColor();
+            setPartnerColor(newColor);
+            window.sessionStorage.setItem('anonychat-partner-color', newColor);
             nextMessageIndexRef.current = 0;
             setActivityEventCount(0);
             activityEventCountRef.current = 0;
@@ -341,6 +384,7 @@ const useWebSocket = (playSound) => {
           setIsUserConnected(true);
           setHasActiveConversation(true);
           isReconnecting = false;
+          hasLostConnection = false;
         }
 
         if (msg.system?.includes('Waiting for a stranger') || msg.system?.includes('No partner available')) {
@@ -355,16 +399,19 @@ const useWebSocket = (playSound) => {
           setIsUserConnected(false);
           setHasActiveConversation(false);
           isReconnecting = false;
+          window.sessionStorage.removeItem('anonychat-active-messages');
         }
 
         if (msg.system?.toLowerCase().includes('connection lost')) {
           setIsUserConnected(false);
         }
 
-        if (msg.system?.includes('disconnected')) {
+        if (msg.system?.includes('Stranger disconnected.') || msg.system?.includes('disconnected.')) {
           setIsUserConnected(false);
           setHasActiveConversation(false);
+          isReconnecting = false;
           playSound('disconnect');
+          window.sessionStorage.removeItem('anonychat-active-messages');
         }
 
         if (msg.type === 'text' || msg.type === 'image') {
@@ -1844,6 +1891,7 @@ const ChatApp = ({ onGoHome }) => {
   };
 
   const handleEndConversation = () => {
+    window.sessionStorage.removeItem('anonychat-active-messages');
     sendMessage({ type: 'endConversation' });
   };
 

@@ -4,7 +4,9 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "node tests/profanity.test.mjs && node tests/e2e.test.mjs",
+    "test": "node --test tests/sqlite-persistence.test.mjs && node tests/profanity.test.mjs && node tests/e2e.test.mjs && node tests/reconnect-persistence.e2e.test.mjs",
+    "test:sqlite": "node --test tests/sqlite-persistence.test.mjs",
+    "test:reconnect": "node tests/reconnect-persistence.e2e.test.mjs",
     "test:profanity": "node tests/profanity.test.mjs",
     "test:e2e": "node tests/e2e.test.mjs"
   },
