@@ -34,6 +34,14 @@ export const AdminConsole = () => {
   const [isBlockListLoading, setIsBlockListLoading] = useState(false);
   const [newBlockWord, setNewBlockWord] = useState('');
 
+  // Ban management state
+  const [bans, setBans] = useState([]);
+  const [isBansLoading, setIsBansLoading] = useState(false);
+  const [bansError, setBansError] = useState('');
+  const [newBanClientId, setNewBanClientId] = useState('');
+  const [newBanReason, setNewBanReason] = useState('Vi phạm quy định ứng dụng (Spam / Quấy rối)');
+  const [newBanDurationMinutes, setNewBanDurationMinutes] = useState(60);
+
   // UI state
   const [copiedId, setCopiedId] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -115,6 +123,24 @@ export const AdminConsole = () => {
     }
   };
 
+  const loadBans = async (adminToken) => {
+    setIsBansLoading(true);
+    setBansError('');
+    try {
+      const response = await fetch('/api/admin/bans', {
+        headers: { Authorization: `Bearer ${adminToken}` }
+      });
+      const result = await response.json();
+      if (response.status === 401) setToken('');
+      if (!response.ok) throw new Error(result.error || 'Không thể tải danh sách cấm.');
+      setBans(result.bans || []);
+    } catch (error) {
+      setBansError(error.message || 'Không thể kết nối tới server.');
+    } finally {
+      setIsBansLoading(false);
+    }
+  };
+
   const handleLogin = async (event) => {
     event.preventDefault();
     setIsSubmitting(true);
@@ -136,7 +162,8 @@ export const AdminConsole = () => {
         loadFeedback(result.token),
         loadAdminStats(result.token),
         loadReports(result.token),
-        loadBlockList(result.token)
+        loadBlockList(result.token),
+        loadBans(result.token)
       ]);
     } catch (error) {
       setStatus({ type: 'error', message: `AUTH_REJECTED // ${error.message || 'Lỗi xác thực'}` });
@@ -212,6 +239,77 @@ export const AdminConsole = () => {
       setStatus({ type: 'success', message: `RULE_REVOKED // TOKEN_UNBLOCKED: "${wordToRemove}"` });
     } catch (error) {
       setStatus({ type: 'error', message: `RULE_REVOCATION_FAILED // ${error.message || 'Lỗi'}` });
+    }
+  };
+
+  const handleCreateBan = async (event) => {
+    if (event) event.preventDefault();
+    const trimmedClientId = newBanClientId.trim();
+    if (!trimmedClientId || !token) return;
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch('/api/admin/bans', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          clientId: trimmedClientId,
+          reason: newBanReason.trim() || 'Vi phạm điều khoản dịch vụ (Spam / Quấy rối)',
+          durationMinutes: Number(newBanDurationMinutes) || 60
+        })
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Không thể áp dụng lệnh cấm.');
+
+      setStatus({
+        type: 'success',
+        message: `BAN_ENFORCED // CLIENT_UUID: "${trimmedClientId}" TERMINATED & RESTRICTED (${newBanDurationMinutes}m)`
+      });
+      setNewBanClientId('');
+      await loadBans(token);
+    } catch (error) {
+      setStatus({ type: 'error', message: `BAN_DISPATCH_FAILED // ${error.message || 'Lỗi hệ thống'}` });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteBan = async (clientIdToUnban) => {
+    if (!clientIdToUnban || !token) return;
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(`/api/admin/bans/${encodeURIComponent(clientIdToUnban)}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Không thể gỡ bỏ lệnh cấm.');
+
+      setStatus({
+        type: 'success',
+        message: `BAN_REVOKED // CLIENT_UUID: "${clientIdToUnban}" RESTORED`
+      });
+      await loadBans(token);
+    } catch (error) {
+      setStatus({ type: 'error', message: `UNBAN_FAILED // ${error.message || 'Lỗi hệ thống'}` });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleQuickBanFromReport = (reportedClientId, reportReason) => {
+    if (!reportedClientId) return;
+    setNewBanClientId(reportedClientId);
+    if (reportReason) {
+      setNewBanReason(`Báo cáo vi phạm: ${reportReason}`);
+    }
+    const inputEl = document.getElementById('ban-client-id-input');
+    if (inputEl) {
+      inputEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      inputEl.focus();
     }
   };
 
@@ -292,6 +390,21 @@ export const AdminConsole = () => {
   });
 
   const formattedUtcTime = currentTime.toISOString().replace('T', ' // ').slice(0, 22) + 'Z';
+
+  const getRemainingTimeString = (expiresAt) => {
+    if (!expiresAt) return 'PERMANENT';
+    const diff = new Date(expiresAt).getTime() - currentTime.getTime();
+    if (diff <= 0) return 'EXPIRED';
+    const totalSeconds = Math.floor(diff / 1000);
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    if (days > 0) {
+      return `${days}d ${hours}h ${minutes}m`;
+    }
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  };
 
   return (
     <div className="min-h-screen w-full bg-[#08090C] text-[#EDEDED] font-mono selection:bg-[#FF2A2A] selection:text-black tactical-grid-bg relative overflow-x-hidden">
@@ -695,6 +808,194 @@ export const AdminConsole = () => {
                     </div>
                   </div>
                 </section>
+
+                {/* ── MODULE 04: CLIENT UUID BAN ENFORCEMENT ── */}
+                <section
+                  id="ban-enforcement-section"
+                  className="border border-[#262C3A] bg-[#0E1017]"
+                  aria-labelledby="ban-module-title"
+                >
+                  <div className="border-b border-[#1E2432] px-4 py-2.5 bg-[#0B0D13] flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[#FF2A2A] font-bold text-xs" aria-hidden="true">&gt;&gt;</span>
+                      <h3 id="ban-module-title" className="text-xs font-bold text-white uppercase tracking-wider">
+                        MODULE_04 // CLIENT_UUID_BAN_ENFORCEMENT
+                      </h3>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-[#FF6B6B] tabular-nums font-bold">
+                        [{bans.length}_BANNED]
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => loadBans(token)}
+                        disabled={isBansLoading}
+                        className="border border-[#2C3446] bg-[#12151D] px-2 py-0.5 text-[10px] text-[#BAC4D6] hover:border-[#FF2A2A] hover:text-white transition-colors disabled:opacity-40"
+                      >
+                        {isBansLoading ? '[ ... ]' : '[ ↺ ]'}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="p-4 sm:p-5 space-y-4">
+                    <p className="text-xs text-[#8E9BB0] border-l-2 border-[#3A455A] pl-3 py-0.5">
+                      Khóa quyền truy cập của máy khách qua Client UUID. Ngắt kết nối socket ngay tức thì và áp dụng màn hình đếm ngược khóa trên thiết bị người dùng.
+                    </p>
+
+                    {bansError && (
+                      <div className="border border-[#FF2A2A] bg-[#FF2A2A]/10 text-[#FF6B6B] p-2.5 text-xs">
+                        [BAN_FETCH_ERROR]: {bansError}
+                      </div>
+                    )}
+
+                    {/* Ban Creation Form */}
+                    <form onSubmit={handleCreateBan} className="space-y-3">
+                      <div>
+                        <label htmlFor="ban-client-id-input" className="block text-[11px] font-bold text-[#A8B4C7] uppercase mb-1">
+                          TARGET_CLIENT_UUID &gt;_
+                        </label>
+                        <input
+                          id="ban-client-id-input"
+                          type="text"
+                          value={newBanClientId}
+                          onChange={(e) => setNewBanClientId(e.target.value.trim())}
+                          placeholder="e.g. 550e8400-e29b-41d4-a716-446655440000"
+                          required
+                          disabled={isSubmitting}
+                          className="w-full border border-[#2B3344] bg-[#07080B] px-3 py-2 text-xs font-mono text-white placeholder-[#454E62] outline-none focus:border-[#FF2A2A] transition-colors"
+                        />
+                      </div>
+
+                      <div>
+                        <label htmlFor="ban-reason-input" className="block text-[11px] font-bold text-[#A8B4C7] uppercase mb-1">
+                          REASON_FOR_RESTRICTION &gt;_
+                        </label>
+                        <input
+                          id="ban-reason-input"
+                          type="text"
+                          value={newBanReason}
+                          onChange={(e) => setNewBanReason(e.target.value)}
+                          placeholder="Nhập lý do cấm..."
+                          required
+                          disabled={isSubmitting}
+                          className="w-full border border-[#2B3344] bg-[#07080B] px-3 py-2 text-xs text-white placeholder-[#454E62] outline-none focus:border-[#FF2A2A] transition-colors"
+                        />
+                      </div>
+
+                      <div>
+                        <span className="block text-[11px] font-bold text-[#A8B4C7] uppercase mb-1.5">
+                          RESTRICTION_DURATION:
+                        </span>
+                        <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-7 text-[10px] font-mono">
+                          {[
+                            { label: '5m', val: 5 },
+                            { label: '15m', val: 15 },
+                            { label: '1h', val: 60 },
+                            { label: '24h', val: 1440 },
+                            { label: '7d', val: 10080 },
+                            { label: '30d', val: 43200 },
+                            { label: '1y (Perm)', val: 525600 }
+                          ].map((item) => (
+                            <button
+                              key={item.val}
+                              type="button"
+                              onClick={() => setNewBanDurationMinutes(item.val)}
+                              className={`border px-2 py-1.5 font-bold transition-colors ${
+                                Number(newBanDurationMinutes) === item.val
+                                  ? 'border-[#FF2A2A] bg-[#FF2A2A] text-black'
+                                  : 'border-[#283042] bg-[#0D1017] text-[#BAC4D6] hover:border-[#4B566D]'
+                              }`}
+                            >
+                              {item.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={!newBanClientId.trim() || isSubmitting}
+                        className="w-full border border-[#FF2A2A] bg-[#FF2A2A] hover:bg-[#E61919] active:translate-y-px text-black font-extrabold uppercase py-2 text-xs tracking-wider transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                      >
+                        {isSubmitting ? '[ EXECUTING_BAN... ]' : '[ ⛔ ENFORCE_BAN_AND_DISCONNECT >>> ]'}
+                      </button>
+                    </form>
+
+                    {/* Active Banned UUIDs catalog */}
+                    <div className="pt-2 border-t border-[#1E2432]">
+                      <div className="flex justify-between items-center text-[10px] text-[#637089] uppercase tracking-wider mb-2">
+                        <span>ACTIVE_UUID_RESTRICTIONS:</span>
+                        <span className="text-[#FF6B6B]">{bans.length} ACTIVE</span>
+                      </div>
+
+                      <div className="border border-[#1E2432] bg-[#07080B] p-3 max-h-64 overflow-y-auto terminal-scroll space-y-2">
+                        {isBansLoading && bans.length === 0 ? (
+                          <div className="text-center py-4 text-xs text-[#556075]">
+                            [ SYNCING_BANS... ]
+                          </div>
+                        ) : bans.length === 0 ? (
+                          <div className="text-center py-4 text-xs text-[#556075]">
+                            [ -- KHÔNG CÓ CLIENT NÀO ĐANG BỊ CẤM -- ]
+                          </div>
+                        ) : (
+                          bans.map((ban) => {
+                            const isExpired =
+                              ban.expiresAt && new Date(ban.expiresAt).getTime() <= currentTime.getTime();
+                            const remaining = getRemainingTimeString(ban.expiresAt);
+
+                            return (
+                              <div
+                                key={ban.clientId}
+                                className={`border p-2.5 space-y-1.5 transition-colors ${
+                                  isExpired
+                                    ? 'border-[#1E2432] bg-[#090B10] opacity-60'
+                                    : 'border-[#3D2024] bg-[#140C0E] hover:border-[#FF2A2A]'
+                                }`}
+                              >
+                                <div className="flex flex-wrap items-center justify-between gap-1 text-[11px]">
+                                  <div className="flex items-center gap-1.5 font-mono">
+                                    <span className="text-[#FF2A2A] font-bold">⛔</span>
+                                    <span className="text-white font-bold select-all">
+                                      {ban.clientId}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleCopyText(ban.clientId, `ban-${ban.clientId}`)}
+                                      className="border border-[#2C3446] px-1.5 py-0.5 text-[9px] text-[#8E9BB0] hover:text-white"
+                                    >
+                                      {copiedId === `ban-${ban.clientId}` ? 'COPIED' : 'COPY'}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteBan(ban.clientId)}
+                                      disabled={isSubmitting}
+                                      className="border border-[#4AF626]/40 bg-[#4AF626]/10 hover:bg-[#4AF626] hover:text-black text-[#4AF626] font-bold px-1.5 py-0.5 text-[9px] uppercase transition-colors"
+                                    >
+                                      [ 🔓 UNBAN ]
+                                    </button>
+                                  </div>
+                                </div>
+
+                                <div className="text-[10px] text-[#FF8585] font-mono">
+                                  <span className="text-[#8892A6]">REASON:</span> {ban.reason}
+                                </div>
+
+                                <div className="flex flex-wrap items-center justify-between gap-1 text-[9px] text-[#637089] pt-1 border-t border-[#231518]">
+                                  <span>BANNED: {new Date(ban.bannedAt).toLocaleTimeString()}</span>
+                                  <span className="text-[#FFB800] font-bold font-mono">
+                                    REMAINING: {remaining}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </section>
               </div>
 
               {/* ══════════════════════════════════════════════════
@@ -820,6 +1121,34 @@ export const AdminConsole = () => {
                                 </time>
                               </div>
 
+                              {/* Reported Client UUID info banner */}
+                              {report.reportedClientId && (
+                                <div className="border border-[#232B3D] bg-[#0A0D14] px-2.5 py-1.5 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                                  <div className="flex items-center gap-1.5 font-mono">
+                                    <span className="text-[#8892A6]">REPORTED_UUID:</span>
+                                    <span className="text-[#FFB800] font-bold select-all tracking-tight">
+                                      {report.reportedClientId}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-1.5">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleCopyText(report.reportedClientId, `uuid-${report.id}`)}
+                                      className="border border-[#2C3446] px-1.5 py-0.5 text-[9px] text-[#8E9BB0] hover:text-white"
+                                    >
+                                      {copiedId === `uuid-${report.id}` ? 'COPIED' : 'COPY'}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleQuickBanFromReport(report.reportedClientId, report.reason)}
+                                      className="border border-[#FF2A2A]/60 bg-[#FF2A2A]/20 hover:bg-[#FF2A2A] hover:text-black text-[#FF6B6B] font-bold px-2 py-0.5 text-[9px] uppercase transition-colors cursor-pointer"
+                                    >
+                                      [ ⛔ BAN_THIS_UUID ]
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+
                               {/* Reported Payload Box */}
                               <div className="border border-[#202636] bg-[#06070A] p-2.5">
                                 <div className="flex justify-between items-center text-[10px] text-[#637089] uppercase tracking-wider mb-1">
@@ -915,6 +1244,15 @@ export const AdminConsole = () => {
                                       >
                                         [ DISMISS_TICKET ]
                                       </button>
+                                      {report.reportedClientId && (
+                                        <button
+                                          type="button"
+                                          onClick={() => handleQuickBanFromReport(report.reportedClientId, report.reason)}
+                                          className="border border-[#FF2A2A]/60 bg-[#FF2A2A]/20 hover:bg-[#FF2A2A] hover:text-black text-[#FF6B6B] font-bold px-3 py-1.5 text-xs uppercase tracking-wider transition-colors cursor-pointer"
+                                        >
+                                          [ ⛔ QUICK_BAN ]
+                                        </button>
+                                      )}
                                     </div>
                                   )}
                                 </div>
@@ -927,7 +1265,7 @@ export const AdminConsole = () => {
                   </div>
                 </section>
 
-                {/* ── MODULE 04: USER COMMUNICATIONS FEEDBACK WIRE ── */}
+                {/* ── MODULE 05: USER COMMUNICATIONS FEEDBACK WIRE ── */}
                 <section
                   className="border border-[#262C3A] bg-[#0E1017]"
                   aria-labelledby="feedback-module-title"
@@ -936,7 +1274,7 @@ export const AdminConsole = () => {
                     <div className="flex items-center gap-2">
                       <span className="text-[#FF2A2A] font-bold text-xs" aria-hidden="true">&gt;&gt;</span>
                       <h3 id="feedback-module-title" className="text-xs font-bold text-white uppercase tracking-wider">
-                        MODULE_04 // USER_DISPATCH_FEEDBACK
+                        MODULE_05 // USER_DISPATCH_FEEDBACK
                       </h3>
                       <span className="text-[10px] text-[#637089]">
                         [MAX_100_LOGS]

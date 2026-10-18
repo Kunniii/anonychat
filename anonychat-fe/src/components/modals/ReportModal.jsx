@@ -26,13 +26,17 @@ export const ReportModal = ({ targetMessage, status, onClose, onSubmit }) => {
   const submit = (event) => {
     event.preventDefault();
     if (isPending || isSent) return;
-    const reportedText = targetMessage?.text || (targetMessage?.image ? '[Hình ảnh]' : '');
+    const reportedText = targetMessage?.text || (targetMessage?.image ? '[Hình ảnh]' : '[Báo cáo người lạ]');
     if (!reportedText) return;
     const reasonText =
       selectedReason === 'Khác' && customDetail.trim()
         ? customDetail.trim()
         : selectedReason + (customDetail.trim() ? `: ${customDetail.trim()}` : '');
-    onSubmit({ reportedText, reason: reasonText });
+    onSubmit({
+      reportedText,
+      reason: reasonText,
+      reportedClientId: targetMessage?.reportedClientId || null
+    });
   };
 
   return (
@@ -55,10 +59,10 @@ export const ReportModal = ({ targetMessage, status, onClose, onSubmit }) => {
               id="report-modal-title"
               className="text-sm font-semibold text-zinc-100 flex items-center gap-1.5"
             >
-              <span>🚩</span> Báo cáo nội dung vi phạm
+              <span>🚩</span> Báo cáo người lạ / vi phạm
             </h2>
             <p className="mt-1 text-xs text-zinc-500">
-              Báo cáo sẽ được gửi tới admin để xử lý và cập nhật bộ lọc từ.
+              Báo cáo sẽ được gửi tới ban quản trị để xử lý và khóa tài khoản vi phạm.
             </p>
           </div>
           <button
@@ -72,12 +76,21 @@ export const ReportModal = ({ targetMessage, status, onClose, onSubmit }) => {
           </button>
         </div>
 
+        {targetMessage?.reportedClientId && (
+          <div className="mb-3 rounded-lg border border-rose-500/20 bg-rose-500/5 px-3 py-2 flex items-center justify-between text-[11px] font-mono">
+            <span className="text-zinc-400">UUID Người lạ:</span>
+            <span className="text-rose-300 font-bold truncate max-w-[200px]" title={targetMessage.reportedClientId}>
+              {targetMessage.reportedClientId}
+            </span>
+          </div>
+        )}
+
         <div className="mb-3 rounded-xl border border-zinc-800 bg-zinc-950/70 p-3">
           <p className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">
-            Nội dung bị báo cáo
+            Nội dung báo cáo
           </p>
           <p className="text-xs text-zinc-200 line-clamp-4 break-words">
-            {targetMessage?.text || (targetMessage?.image ? '[Hình ảnh]' : '')}
+            {targetMessage?.text || (targetMessage?.image ? '[Hình ảnh]' : '[Báo cáo hành vi vi phạm của người lạ]')}
           </p>
         </div>
 

@@ -1,4 +1,4 @@
-import { ArrowLeft, Heart, LogOut } from 'lucide-react';
+import { ArrowLeft, Heart, LogOut, ShieldAlert } from 'lucide-react';
 import OnlineCounter from '../common/OnlineCounter.jsx';
 
 export const ChatHeader = ({
@@ -6,6 +6,7 @@ export const ChatHeader = ({
   hasActiveConversation,
   isUserConnected,
   onEndConversation,
+  onOpenReport,
   onOpenDonation,
   onGoHome
 }) => (
@@ -38,6 +39,18 @@ export const ChatHeader = ({
     </div>
     <div className="flex min-w-0 items-center justify-end gap-2">
       <OnlineCounter count={onlineCount} />
+      {hasActiveConversation && onOpenReport && (
+        <button
+          type="button"
+          onClick={onOpenReport}
+          className="inline-flex items-center gap-1.5 rounded-full border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-xs font-medium text-rose-300 hover:bg-rose-500/20 hover:border-rose-500/50 hover:text-white transition-all cursor-pointer"
+          title="Báo cáo người lạ vi phạm"
+          aria-label="Báo cáo người lạ"
+        >
+          <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
+          <span className="hidden xs:inline sm:inline">Báo cáo</span>
+        </button>
+      )}
       <button
         type="button"
         onClick={onOpenDonation}

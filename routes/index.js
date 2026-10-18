@@ -7,16 +7,18 @@ import { createAdminRouter } from './admin/index.js';
  * Creates and mounts all application routes.
  *
  * @param {Object} context
- * @param {function} context.getIsShuttingDown
- * @param {function} context.broadcastAnnouncement
- * @param {function} context.getStats
- * @param {function} context.broadcastBlockList
+ * @param {function} [context.getIsShuttingDown]
+ * @param {function} [context.broadcastAnnouncement]
+ * @param {function} [context.getStats]
+ * @param {function} [context.broadcastBlockList]
+ * @param {function} [context.disconnectBannedUser]
  */
 export function createAppRouter({
   getIsShuttingDown,
   broadcastAnnouncement,
   getStats,
-  broadcastBlockList
+  broadcastBlockList,
+  disconnectBannedUser
 } = {}) {
   const router = Router();
 
@@ -30,7 +32,8 @@ export function createAppRouter({
   router.use('/api/admin', createAdminRouter({
     broadcastAnnouncement,
     getStats,
-    broadcastBlockList
+    broadcastBlockList,
+    disconnectBannedUser
   }));
 
   return router;

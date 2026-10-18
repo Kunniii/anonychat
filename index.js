@@ -16,6 +16,7 @@ import {
   saveBlockedPair,
   deleteBlockedPair,
   loadActiveBlockedPairs,
+  getBannedUser,
   closeSessionDb
 } from './sessionStore.js';
 
@@ -55,12 +56,59 @@ function getStats() {
   };
 }
 
+function disconnectBannedUser(clientId, banInfo) {
+  const session = clients.get(clientId);
+  if (!session) return;
+
+  const ws = session.ws;
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    safeSend(ws, {
+      type: 'banned',
+      reason: banInfo.reason,
+      bannedAt: banInfo.bannedAt,
+      expiresAt: banInfo.expiresAt
+    });
+
+    if (ws.partner) {
+      const partner = ws.partner;
+      ws.partner = null;
+      partner.partner = null;
+      safeSend(partner, {
+        system: '[SYSTEM] Cuộc trò chuyện đã kết thúc.'
+      });
+      if (partner.session) {
+        partner.session.partnerId = null;
+        saveSession(partner.session);
+        if (!partner.session.waiting) {
+          enqueueSession(partner.session);
+          safeSend(partner, { system: '[SYSTEM] Waiting for a stranger…' });
+        }
+        matchWaiting();
+      }
+    }
+
+    session.partnerId = null;
+    session.waiting = false;
+    session.queuedPosition = null;
+    saveSession(session);
+
+    setTimeout(() => {
+      try {
+        ws.close(4003, 'Account temporarily blocked');
+      } catch {
+        // ignore
+      }
+    }, 250);
+  }
+}
+
 // Mount modular API endpoints
 app.use(createAppRouter({
   getIsShuttingDown: () => isShuttingDown,
   broadcastAnnouncement,
   getStats,
-  broadcastBlockList
+  broadcastBlockList,
+  disconnectBannedUser
 }));
 
 // SPA client routes
@@ -242,8 +290,8 @@ function matchWaiting() {
       continue;
     }
 
-    safeSend(a, { system: '[SYSTEM] Connected to a stranger.' });
-    safeSend(b, { system: '[SYSTEM] Connected to a stranger.' });
+    safeSend(a, { system: '[SYSTEM] Connected to a stranger.', partnerClientId: b.session.clientId });
+    safeSend(b, { system: '[SYSTEM] Connected to a stranger.', partnerClientId: a.session.clientId });
     i--;
   }
 }
@@ -509,6 +557,24 @@ wss.on('connection', (ws, request) => {
     return;
   }
 
+  const banInfo = getBannedUser(clientId);
+  if (banInfo) {
+    safeSend(ws, {
+      type: 'banned',
+      reason: banInfo.reason,
+      bannedAt: banInfo.bannedAt,
+      expiresAt: banInfo.expiresAt
+    });
+    setTimeout(() => {
+      try {
+        ws.close(4003, 'Account temporarily blocked');
+      } catch {
+        // ignore
+      }
+    }, 250);
+    return;
+  }
+
   ws.id = uuid();
   let session = clients.get(clientId);
   const isReconnect = Boolean(session);
@@ -566,8 +632,8 @@ wss.on('connection', (ws, request) => {
     if (partner?.readyState === WebSocket.OPEN) {
       ws.partner = partner;
       partner.partner = ws;
-      safeSend(ws, { system: '[SYSTEM] Reconnected to your stranger.' });
-      safeSend(partner, { system: '[SYSTEM] Stranger reconnected.' });
+      safeSend(ws, { system: '[SYSTEM] Reconnected to your stranger.', partnerClientId: partnerSession.clientId });
+      safeSend(partner, { system: '[SYSTEM] Stranger reconnected.', partnerClientId: session.clientId });
     } else {
       safeSend(ws, { system: '[SYSTEM] Stranger connection lost. Reconnecting…' });
     }

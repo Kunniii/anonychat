@@ -7,19 +7,22 @@ import { createAdminFeedbackRouter } from './feedback.js';
 import { createAdminStatsRouter } from './stats.js';
 import { createAdminReportsRouter } from './reports.js';
 import { createAdminBlockListRouter } from './blockList.js';
+import { createAdminBansRouter } from './bans.js';
 
 /**
  * Creates and configures the /api/admin router.
  *
  * @param {Object} services
- * @param {function} services.broadcastAnnouncement
- * @param {function} services.getStats
- * @param {function} services.broadcastBlockList
+ * @param {function} [services.broadcastAnnouncement]
+ * @param {function} [services.getStats]
+ * @param {function} [services.broadcastBlockList]
+ * @param {function} [services.disconnectBannedUser]
  */
 export function createAdminRouter({
   broadcastAnnouncement,
   getStats,
-  broadcastBlockList
+  broadcastBlockList,
+  disconnectBannedUser
 } = {}) {
   const router = Router();
 
@@ -36,6 +39,7 @@ export function createAdminRouter({
   router.use(createAdminStatsRouter({ getStats }));
   router.use(createAdminReportsRouter({ broadcastBlockList }));
   router.use(createAdminBlockListRouter({ broadcastBlockList }));
+  router.use(createAdminBansRouter({ disconnectBannedUser }));
 
   return router;
 }
