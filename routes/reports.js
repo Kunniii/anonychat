@@ -18,6 +18,10 @@ export function createReportsRouter() {
   router.post('/api/reports', reportLimiter, async (request, response) => {
     const reportedText = typeof request.body?.reportedText === 'string' ? request.body.reportedText.trim() : '';
     const reason = typeof request.body?.reason === 'string' ? request.body.reason.trim() : '';
+    const rawReportedClientId = typeof request.body?.reportedClientId === 'string' ? request.body.reportedClientId.trim() : null;
+    const reportedClientId = rawReportedClientId && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(rawReportedClientId)
+      ? rawReportedClientId
+      : null;
 
     if (!reportedText || reportedText.length > MAX_REPORT_MESSAGE_LENGTH) {
       response.status(400).json({
@@ -39,6 +43,7 @@ export function createReportsRouter() {
         timestamp: new Date().toISOString(),
         reportedText,
         reason: reason || null,
+        reportedClientId,
         resolved: false
       });
       response.status(201).json({ ok: true });

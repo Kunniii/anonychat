@@ -10,6 +10,11 @@ import {
   saveBlockedPair,
   deleteBlockedPair,
   loadActiveBlockedPairs,
+  saveBannedUser,
+  deleteBannedUser,
+  getBannedUser,
+  loadActiveBannedUsers,
+  isUserBanned,
   closeSessionDb
 } from '../sessionStore.js';
 
@@ -152,5 +157,46 @@ describe('SQLite Session & State Persistence', () => {
       isPartnerOpen = Boolean(partner && partner.readyState === WebSocket.OPEN);
     });
     assert.equal(isPartnerOpen, false, 'Partner should be safely determined as not open');
+  });
+
+  it('persists and enforces banned users based on UUID', () => {
+    const bannedClient = '00000000-0000-4000-8000-000000000999';
+    const futureExpires = Date.now() + 60_000;
+
+    saveBannedUser({
+      clientId: bannedClient,
+      reason: 'Ngôn từ độc hại',
+      bannedAt: Date.now(),
+      expiresAt: futureExpires,
+      bannedBy: 'admin'
+    });
+
+    assert.equal(isUserBanned(bannedClient), true, 'User should be reported as banned');
+    const banInfo = getBannedUser(bannedClient);
+    assert.ok(banInfo, 'Ban info should be returned');
+    assert.equal(banInfo.reason, 'Ngôn từ độc hại');
+    assert.equal(banInfo.expiresAt, futureExpires);
+
+    const activeBans = loadActiveBannedUsers();
+    assert.ok(activeBans.some(b => b.clientId === bannedClient), 'Active bans should include user');
+
+    // Unban
+    deleteBannedUser(bannedClient);
+    assert.equal(isUserBanned(bannedClient), false, 'User should be unbanned');
+    assert.equal(getBannedUser(bannedClient), null);
+  });
+
+  it('auto-prunes expired bans', () => {
+    const expiredClient = '00000000-0000-4000-8000-000000000888';
+    saveBannedUser({
+      clientId: expiredClient,
+      reason: 'Hết hạn',
+      bannedAt: Date.now() - 10_000,
+      expiresAt: Date.now() - 1_000,
+      bannedBy: 'admin'
+    });
+
+    assert.equal(isUserBanned(expiredClient), false, 'Expired ban should not be active');
+    assert.equal(getBannedUser(expiredClient), null, 'getBannedUser should return null for expired');
   });
 });

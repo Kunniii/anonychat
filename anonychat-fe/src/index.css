@@ -1,16 +1,16 @@
 @import "tailwindcss";
 
 @font-face {
-  font-family: 'Maple Mono';
-  src: url('/fonts/MapleMono.ttf') format('truetype');
+  font-family: "Maple Mono";
+  src: url("/fonts/MapleMono.ttf") format("truetype");
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'Maple Mono';
-  src: url('/fonts/MapleMono.ttf') format('truetype');
+  font-family: "Maple Mono";
+  src: url("/fonts/MapleMono.ttf") format("truetype");
   font-weight: 100 900;
   font-style: italic;
   font-display: swap;
@@ -18,7 +18,7 @@
 
 :root {
   color-scheme: dark;
-  font-family: 'Maple Mono', monospace;
+  font-family: "Maple Mono", monospace;
   background-color: #08090b;
   color: #f4f4f5;
 }
@@ -37,7 +37,11 @@ html {
 body {
   margin: 0;
   min-height: 100dvh;
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family:
+    "Plus Jakarta Sans",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
   letter-spacing: -0.015em;
   line-height: 1.6;
   background: #08090c;
@@ -50,17 +54,21 @@ body {
 }
 
 .font-editorial {
-  font-family: 'Newsreader', Georgia, serif;
+  font-family: "Newsreader", Georgia, serif;
   letter-spacing: -0.025em;
 }
 
 .font-sans-clean {
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family:
+    "Plus Jakarta Sans",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
 }
 
 .font-mono-clean,
 .font-chat-mono {
-  font-family: 'Maple Mono', monospace !important;
+  font-family: "Maple Mono", monospace !important;
 }
 
 /* Enforce Maple Mono for the entire Chats view UI */
@@ -70,7 +78,7 @@ body {
 .anonychat-app-root input,
 .anonychat-app-root textarea,
 .anonychat-app-root select {
-  font-family: 'Maple Mono', monospace !important;
+  font-family: "Maple Mono", monospace !important;
 }
 
 .anonychat-app-root {
@@ -403,7 +411,7 @@ input {
 
 /* Industrial Brutalist & Tactical Telemetry UI */
 .tactical-grid-bg {
-  background-image: 
+  background-image:
     linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
   background-size: 24px 24px;

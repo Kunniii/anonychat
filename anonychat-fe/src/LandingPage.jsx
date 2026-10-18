@@ -12,11 +12,14 @@ import {
   Image as ImageIcon,
   MessageSquareCode,
   Plus,
-  Minus
+  Minus,
+  ShieldAlert,
+  Filter,
 } from "lucide-react";
 
 export const LandingPage = ({ onStartChat, onOpenDonation }) => {
   const [activeFaq, setActiveFaq] = useState(null);
+  const [mockReportSent, setMockReportSent] = useState(false);
   const [mockReactions, setMockReactions] = useState([
     { type: "heart", count: 4 },
     { type: "laugh", count: 2 },
@@ -57,7 +60,11 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
     },
     {
       q: "Nếu gặp phải người không phù hợp hoặc có hành vi quấy rối?",
-      a: "Bạn có thể bấm kết thúc và chuyển sang người mới trong vòng 1 giây. Ngoài ra, giao diện có sẵn tính năng báo cáo vi phạm để quản trị viên kiểm tra và xử lý kịp thời.",
+      a: "Bạn có thể bấm ngay nút 'Báo cáo' (biểu tượng chiếc khiên đỏ) trên thanh điều khiển phòng chat. Hệ thống ghi nhận nội dung vi phạm kèm mã định danh đối phương gửi thẳng tới Admin để xem xét và xử lý khóa (Ban). Sau đó, bạn có thể chuyển sang đối tác mới trong vòng 1 giây.",
+    },
+    {
+      q: "Người có hành vi vi phạm sẽ bị xử lý như thế nào?",
+      a: "Tùy mức độ vi phạm (spam, ngôn từ thô tục, quấy rối), Admin sẽ thi hành lệnh khóa thiết bị theo Client UUID từ 15 phút, 24 giờ cho đến vĩnh viễn. Ngay khi lệnh ban được ban hành, máy khách vi phạm sẽ bị ngắt kết nối lập tức và hiển thị giao diện đếm ngược thời gian bị cấm.",
     },
     {
       q: "Tính năng gửi góp ý bằng lệnh /admin hoạt động như thế nào?",
@@ -270,13 +277,40 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 <span>đã kết nối với một người lạ</span>
               </div>
-              <span className="text-[11px] font-mono-clean text-zinc-600">
-                anonychat://session
-              </span>
+              <div className="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMockReportSent(true);
+                    setTimeout(() => setMockReportSent(false), 3500);
+                  }}
+                  title="Thử tính năng báo cáo vi phạm"
+                  className="flex items-center gap-1.5 rounded-full border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 px-2.5 py-1 text-[11px] text-rose-300 font-sans-clean transition-colors cursor-pointer"
+                >
+                  <ShieldAlert className="w-3 h-3 text-rose-400" />
+                  <span>{mockReportSent ? "Đã gửi báo cáo!" : "Báo cáo"}</span>
+                </button>
+                <span className="text-[11px] font-mono-clean text-zinc-600 hidden sm:inline">
+                  anonychat://session
+                </span>
+              </div>
             </div>
 
             {/* Simulated Chat Dialogue */}
             <div className="space-y-4 max-w-2xl mx-auto py-2">
+              {mockReportSent && (
+                <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-3.5 text-xs text-rose-200 flex items-start gap-2.5 transition-all">
+                  <ShieldAlert className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                  <div className="leading-relaxed">
+                    <strong className="text-white block mb-0.5">
+                      [HỆ THỐNG KIỂM DUYỆT]:
+                    </strong>
+                    Báo cáo vi phạm đã được ghi nhận kèm mã định danh đối
+                    phương. Admin sẽ kiểm tra và áp dụng lệnh khóa ngay lập tức.
+                  </div>
+                </div>
+              )}
+
               {/* Partner message */}
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 rounded-full bg-white/[0.06] border border-white/[0.08] flex items-center justify-center shrink-0 text-zinc-400 text-xs font-mono-clean">
@@ -365,6 +399,17 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
                   <Sparkles className="w-3 h-3 text-sky-400" />
                   <span>Cột mốc chat</span>
                 </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMockReportSent(true);
+                    setTimeout(() => setMockReportSent(false), 3500);
+                  }}
+                  className="rounded-full border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 px-3 py-1 text-xs text-rose-300 transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+                >
+                  <ShieldAlert className="w-3 h-3 text-rose-400" />
+                  <span>Báo cáo vi phạm</span>
+                </button>
               </div>
 
               <button
@@ -452,7 +497,58 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
             </div>
           </div>
 
-          {/* Card 3: Reconnect Grace Period (col-span-4) */}
+          {/* Card 3: Instant Report & Ban (col-span-6) */}
+          <div className="md:col-span-6 rounded-[2rem] p-1.5 bg-white/[0.03] ring-1 ring-white/[0.08] transition-all duration-300 hover:ring-rose-500/30">
+            <div className="h-full rounded-[calc(2rem-0.375rem)] bg-[#0d0e13] p-7 md:p-8 flex flex-col justify-between shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
+              <div>
+                <div className="w-10 h-10 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 mb-6">
+                  <ShieldAlert className="w-5 h-5" />
+                </div>
+                <h3 className="text-xl font-medium text-white tracking-tight">
+                  Báo cáo &amp; Khóa vi phạm 1-chạm
+                </h3>
+                <p className="mt-3 text-sm text-zinc-400 leading-relaxed">
+                  Gặp phải người lạ quấy rối, spam hay gửi tin nhắn khiếm nhã?
+                  Nút <strong className="text-zinc-200">Báo cáo</strong> luôn
+                  sẵn sàng trên thanh điều khiển. Báo cáo kèm mã Client UUID ẩn
+                  được chuyển thẳng tới Admin để ban nick tức thì, bảo vệ bạn mà
+                  không làm lộ danh tính.
+                </p>
+              </div>
+              <div className="mt-8 pt-5 border-t border-white/[0.06] flex items-center justify-between text-xs font-mono-clean text-zinc-400">
+                <span>Cơ chế: Ban theo UUID</span>
+                <span className="text-rose-400 flex items-center gap-1.5 font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                  Xử lý vi phạm tức thời
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 4: Multi-layer Content Filter (col-span-6) */}
+          <div className="md:col-span-6 rounded-[2rem] p-1.5 bg-white/[0.03] ring-1 ring-white/[0.08] transition-all duration-300 hover:ring-emerald-500/30">
+            <div className="h-full rounded-[calc(2rem-0.375rem)] bg-[#0d0e13] p-7 md:p-8 flex flex-col justify-between shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
+              <div>
+                <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mb-6">
+                  <Filter className="w-5 h-5" />
+                </div>
+                <h3 className="text-xl font-medium text-white tracking-tight">
+                  Bộ lọc nội dung độc hại tự động
+                </h3>
+                <p className="mt-3 text-sm text-zinc-400 leading-relaxed">
+                  Hệ thống tích hợp bộ lọc từ ngữ nhạy cảm đa tầng được tinh
+                  chỉnh cho tiếng Việt, tự động chặn đứng các nội dung lăng mạ,
+                  quấy rối và từ ngữ độc hại trước khi đối phương kịp nhìn thấy.
+                </p>
+              </div>
+              <div className="mt-8 pt-5 border-t border-white/[0.06] flex items-center justify-between text-xs font-mono-clean text-zinc-400">
+                <span>Quy tắc: 160+ mẫu độc hại</span>
+                <span className="text-emerald-400">Không gian an toàn</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 5: Reconnect Grace Period (col-span-4) */}
           <div className="md:col-span-4 rounded-[2rem] p-1.5 bg-white/[0.03] ring-1 ring-white/[0.08] transition-all duration-300 hover:ring-white/20">
             <div className="h-full rounded-[calc(2rem-0.375rem)] bg-[#0d0e13] p-7 md:p-8 flex flex-col justify-between shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
               <div>
@@ -473,7 +569,7 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
             </div>
           </div>
 
-          {/* Card 4: Real-time signals & Media (col-span-4) */}
+          {/* Card 6: Real-time signals & Media (col-span-4) */}
           <div className="md:col-span-4 rounded-[2rem] p-1.5 bg-white/[0.03] ring-1 ring-white/[0.08] transition-all duration-300 hover:ring-white/20">
             <div className="h-full rounded-[calc(2rem-0.375rem)] bg-[#0d0e13] p-7 md:p-8 flex flex-col justify-between shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
               <div>
@@ -494,7 +590,7 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
             </div>
           </div>
 
-          {/* Card 5: Direct Dev Channel (col-span-4) */}
+          {/* Card 7: Direct Dev Channel (col-span-4) */}
           <div className="md:col-span-4 rounded-[2rem] p-1.5 bg-white/[0.03] ring-1 ring-white/[0.08] transition-all duration-300 hover:ring-white/20">
             <div className="h-full rounded-[calc(2rem-0.375rem)] bg-[#0d0e13] p-7 md:p-8 flex flex-col justify-between shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
               <div>
@@ -576,11 +672,13 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
               03
             </span>
             <h3 className="text-base font-semibold text-white mt-3 tracking-tight">
-              Lịch sự và chừng mực
+              Lịch sự &amp; Nói không với quấy rối
             </h3>
             <p className="mt-2 text-sm text-zinc-400 leading-relaxed">
-              Không gửi nội dung thô tục, quấy rối hay spam vô nghĩa. Hệ thống
-              có bộ lọc tự động và nút báo cáo dành cho vi phạm.
+              Không gửi nội dung thô tục, quấy rối hay spam vô nghĩa. Mọi phòng
+              chat đều trang bị sẵn nút "Báo cáo". Ban quản trị xử lý nghiêm và
+              áp dụng cơ chế khóa thiết bị có thời hạn hoặc vĩnh viễn với các
+              trường hợp vi phạm.
             </p>
           </div>
 
@@ -629,7 +727,11 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
                     {faq.q}
                   </span>
                   <span className="w-7 h-7 rounded-full border border-white/10 flex items-center justify-center shrink-0 text-zinc-400 group-hover:text-white group-hover:border-white/20 transition-all">
-                    {isOpen ? <Minus className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+                    {isOpen ? (
+                      <Minus className="w-3.5 h-3.5" />
+                    ) : (
+                      <Plus className="w-3.5 h-3.5" />
+                    )}
                   </span>
                 </button>
                 {isOpen && (

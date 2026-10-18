@@ -11,6 +11,7 @@ import EasterEggCelebration from './EasterEggCelebration.jsx';
 import FeedbackModal from '../modals/FeedbackModal.jsx';
 import ReportModal from '../modals/ReportModal.jsx';
 import DonationModal from '../modals/DonationModal.jsx';
+import BannedOverlay from '../modals/BannedOverlay.jsx';
 
 export const ChatApp = ({ onGoHome }) => {
   const { playSound } = useAudio();
@@ -27,7 +28,10 @@ export const ChatApp = ({ onGoHome }) => {
     feedbackStatus,
     clearFeedbackStatus,
     customBlockWords,
-    partnerColor
+    partnerColor,
+    partnerClientId,
+    bannedInfo,
+    clearBannedInfo
   } = useChatWebSocket(playSound);
 
   const [reportingMessage, setReportingMessage] = useState(null);
@@ -35,21 +39,32 @@ export const ChatApp = ({ onGoHome }) => {
 
   const handleOpenReport = useCallback((messageData) => {
     setReportStatus(null);
-    setReportingMessage(messageData);
-  }, []);
+    setReportingMessage({
+      ...messageData,
+      reportedClientId: messageData?.reportedClientId || partnerClientId
+    });
+  }, [partnerClientId]);
+
+  const handleOpenNavReport = useCallback(() => {
+    setReportStatus(null);
+    setReportingMessage({
+      text: '[Báo cáo hành vi người lạ trong cuộc trò chuyện]',
+      reportedClientId: partnerClientId
+    });
+  }, [partnerClientId]);
 
   const handleCloseReport = useCallback(() => {
     setReportingMessage(null);
     setReportStatus(null);
   }, []);
 
-  const handleSubmitReport = useCallback(async ({ reportedText, reason }) => {
+  const handleSubmitReport = useCallback(async ({ reportedText, reason, reportedClientId }) => {
     setReportStatus({ type: 'pending', message: 'Đang gửi báo cáo…' });
     try {
       const response = await fetch('/api/reports', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reportedText, reason })
+        body: JSON.stringify({ reportedText, reason, reportedClientId })
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Không thể gửi báo cáo.');
@@ -346,6 +361,7 @@ export const ChatApp = ({ onGoHome }) => {
           hasActiveConversation={hasActiveConversation}
           isUserConnected={isUserConnected}
           onEndConversation={handleEndConversation}
+          onOpenReport={hasActiveConversation ? handleOpenNavReport : undefined}
           onOpenDonation={() => setIsDonationOpen(true)}
           onGoHome={onGoHome}
         />
@@ -381,6 +397,7 @@ export const ChatApp = ({ onGoHome }) => {
         />
       )}
       {isDonationOpen && <DonationModal onClose={handleCloseDonation} />}
+      {bannedInfo && <BannedOverlay banInfo={bannedInfo} onDismiss={clearBannedInfo} />}
     </div>
   );
 };

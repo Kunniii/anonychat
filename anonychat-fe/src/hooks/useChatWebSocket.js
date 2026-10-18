@@ -38,6 +38,25 @@ export const useChatWebSocket = (playSound) => {
     }
     return getRandomPartnerColor();
   });
+  const [partnerClientId, setPartnerClientId] = useState(null);
+  const [reconnectTrigger, setReconnectTrigger] = useState(0);
+  const [bannedInfo, setBannedInfo] = useState(() => {
+    try {
+      const saved = window.localStorage.getItem('anonychat-banned-info');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && Number.isFinite(parsed.expiresAt) && parsed.expiresAt > Date.now()) {
+          return parsed;
+        }
+        window.localStorage.removeItem('anonychat-banned-info');
+      }
+    } catch {
+      // ignore
+    }
+    return null;
+  });
+  const bannedInfoRef = useRef(bannedInfo);
+  bannedInfoRef.current = bannedInfo;
 
   useEffect(() => {
     try {
@@ -100,6 +119,9 @@ export const useChatWebSocket = (playSound) => {
 
     const connect = () => {
       if (disposed) return;
+      if (bannedInfoRef.current && Number.isFinite(bannedInfoRef.current.expiresAt) && bannedInfoRef.current.expiresAt > Date.now()) {
+        return;
+      }
 
       websocket = new WebSocket(wsUrl);
       websocket.binaryType = 'arraybuffer';
@@ -192,6 +214,31 @@ export const useChatWebSocket = (playSound) => {
           msg = JSON.parse(event.data);
         } catch {
           msg = { system: event.data };
+        }
+
+        if (msg.type === 'banned') {
+          const banData = {
+            isBanned: true,
+            reason: msg.reason || 'Vi phạm tiêu chuẩn cộng đồng',
+            bannedAt: msg.bannedAt || Date.now(),
+            expiresAt: msg.expiresAt,
+            clientId
+          };
+          setBannedInfo(banData);
+          try {
+            window.localStorage.setItem('anonychat-banned-info', JSON.stringify(banData));
+          } catch {
+            // ignore
+          }
+          setIsUserConnected(false);
+          setHasActiveConversation(false);
+          setPartnerClientId(null);
+          playSound('end');
+          return;
+        }
+
+        if (typeof msg.partnerClientId === 'string') {
+          setPartnerClientId(msg.partnerClientId);
         }
 
         if (msg.type === 'config' && Number.isInteger(msg.reconnectGraceSeconds) && msg.reconnectGraceSeconds > 0) {
@@ -339,6 +386,7 @@ export const useChatWebSocket = (playSound) => {
         if (msg.system?.toLowerCase().includes('conversation ended')) {
           setIsUserConnected(false);
           setHasActiveConversation(false);
+          setPartnerClientId(null);
           isReconnecting = false;
           window.sessionStorage.removeItem('anonychat-active-messages');
           blobUrlsRef.current.forEach((url) => {
@@ -358,6 +406,7 @@ export const useChatWebSocket = (playSound) => {
         if (msg.system?.includes('Stranger disconnected.') || msg.system?.includes('disconnected.')) {
           setIsUserConnected(false);
           setHasActiveConversation(false);
+          setPartnerClientId(null);
           isReconnecting = false;
           playSound('disconnect');
           window.sessionStorage.removeItem('anonychat-active-messages');
@@ -458,6 +507,11 @@ export const useChatWebSocket = (playSound) => {
         window.clearInterval(keepaliveInterval);
         setWs(null);
         setIsUserConnected(false);
+
+        if (event.code === 4003 || (bannedInfoRef.current && Number.isFinite(bannedInfoRef.current.expiresAt) && bannedInfoRef.current.expiresAt > Date.now())) {
+          return;
+        }
+
         if (event.code === 4001 && event.reason === 'Reconnected from this client') {
           setMessages((prev) => [
             ...prev,
@@ -513,7 +567,7 @@ export const useChatWebSocket = (playSound) => {
       });
       blobUrlsRef.current = [];
     };
-  }, [playSound, recordActivityEvent]);
+  }, [playSound, recordActivityEvent, reconnectTrigger]);
 
   const sendMessage = (data) => {
     if (ws && ws.readyState === WebSocket.OPEN) {
@@ -578,6 +632,16 @@ export const useChatWebSocket = (playSound) => {
 
   const clearFeedbackStatus = useCallback(() => setFeedbackStatus(null), []);
 
+  const clearBannedInfo = useCallback(() => {
+    setBannedInfo(null);
+    try {
+      window.localStorage.removeItem('anonychat-banned-info');
+    } catch {
+      // ignore
+    }
+    setReconnectTrigger((prev) => prev + 1);
+  }, []);
+
   return {
     isUserConnected,
     hasActiveConversation,
@@ -591,7 +655,10 @@ export const useChatWebSocket = (playSound) => {
     activityEventCount,
     eventMilestoneTypesRef,
     customBlockWords,
-    partnerColor
+    partnerColor,
+    partnerClientId,
+    bannedInfo,
+    clearBannedInfo
   };
 };
 

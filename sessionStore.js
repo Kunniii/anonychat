@@ -30,7 +30,20 @@ function getStatements() {
       `),
       deleteBlockedPair: db.prepare('DELETE FROM blocked_pairs WHERE pair_key = ?'),
       pruneBlockedPairs: db.prepare('DELETE FROM blocked_pairs WHERE expires_at <= ?'),
-      selectBlockedPairs: db.prepare('SELECT pair_key, expires_at FROM blocked_pairs')
+      selectBlockedPairs: db.prepare('SELECT pair_key, expires_at FROM blocked_pairs'),
+      saveBannedUser: db.prepare(`
+        INSERT INTO banned_users (client_id, reason, banned_at, expires_at, banned_by)
+        VALUES (?, ?, ?, ?, ?)
+        ON CONFLICT(client_id) DO UPDATE SET
+          reason = excluded.reason,
+          banned_at = excluded.banned_at,
+          expires_at = excluded.expires_at,
+          banned_by = excluded.banned_by;
+      `),
+      deleteBannedUser: db.prepare('DELETE FROM banned_users WHERE client_id = ?'),
+      selectBannedUser: db.prepare('SELECT client_id, reason, banned_at, expires_at, banned_by FROM banned_users WHERE client_id = ?'),
+      selectActiveBannedUsers: db.prepare('SELECT client_id, reason, banned_at, expires_at, banned_by FROM banned_users WHERE expires_at > ? ORDER BY banned_at DESC'),
+      pruneExpiredBans: db.prepare('DELETE FROM banned_users WHERE expires_at <= ?')
     };
   }
   return statements;
@@ -71,6 +84,15 @@ export function initSessionDb(customPath) {
       pair_key TEXT PRIMARY KEY,
       expires_at INTEGER NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS banned_users (
+      client_id TEXT PRIMARY KEY,
+      reason TEXT NOT NULL,
+      banned_at INTEGER NOT NULL,
+      expires_at INTEGER NOT NULL,
+      banned_by TEXT DEFAULT 'admin'
+    );
+    CREATE INDEX IF NOT EXISTS idx_banned_expires ON banned_users(expires_at);
   `);
 
   statements = null;
@@ -211,6 +233,90 @@ export function loadActiveBlockedPairs() {
     pairKey: r.pair_key,
     expiresAt: r.expires_at
   }));
+}
+
+/**
+ * Persists or updates a banned user in SQLite.
+ * @param {object} ban
+ * @param {string} ban.clientId
+ * @param {string} ban.reason
+ * @param {number} [ban.bannedAt]
+ * @param {number} ban.expiresAt
+ * @param {string} [ban.bannedBy]
+ */
+export function saveBannedUser({ clientId, reason, bannedAt = Date.now(), expiresAt, bannedBy = 'admin' }) {
+  if (!db || !clientId || !reason || !expiresAt) return;
+  const stmts = getStatements();
+  stmts?.saveBannedUser.run(clientId, reason, bannedAt, expiresAt, bannedBy);
+}
+
+/**
+ * Removes a ban for a client UUID.
+ * @param {string} clientId
+ */
+export function deleteBannedUser(clientId) {
+  if (!db || !clientId) return;
+  const stmts = getStatements();
+  stmts?.deleteBannedUser.run(clientId);
+}
+
+/**
+ * Retrieves active ban info for a client UUID if not expired.
+ * Automatically prunes if expired.
+ * @param {string} clientId
+ * @returns {{ clientId: string, reason: string, bannedAt: number, expiresAt: number, bannedBy: string } | null}
+ */
+export function getBannedUser(clientId) {
+  if (!db || !clientId) return null;
+  const stmts = getStatements();
+  if (!stmts) return null;
+
+  const row = stmts.selectBannedUser.get(clientId);
+  if (!row) return null;
+
+  if (row.expires_at <= Date.now()) {
+    stmts.deleteBannedUser.run(clientId);
+    return null;
+  }
+
+  return {
+    clientId: row.client_id,
+    reason: row.reason,
+    bannedAt: row.banned_at,
+    expiresAt: row.expires_at,
+    bannedBy: row.banned_by
+  };
+}
+
+/**
+ * Loads all unexpired banned users and prunes expired ones.
+ * @returns {Array<{ clientId: string, reason: string, bannedAt: number, expiresAt: number, bannedBy: string }>}
+ */
+export function loadActiveBannedUsers() {
+  if (!db) return [];
+  const stmts = getStatements();
+  if (!stmts) return [];
+
+  const now = Date.now();
+  stmts.pruneExpiredBans.run(now);
+
+  const rows = stmts.selectActiveBannedUsers.all(now);
+  return rows.map((r) => ({
+    clientId: r.client_id,
+    reason: r.reason,
+    bannedAt: r.banned_at,
+    expiresAt: r.expires_at,
+    bannedBy: r.banned_by
+  }));
+}
+
+/**
+ * Checks whether a client UUID is actively banned.
+ * @param {string} clientId
+ * @returns {boolean}
+ */
+export function isUserBanned(clientId) {
+  return Boolean(getBannedUser(clientId));
 }
 
 /**
