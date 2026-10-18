@@ -123,7 +123,14 @@ export const ChatApp = ({ onGoHome }) => {
   const [isRetroMode, setIsRetroMode] = useState(false);
   const [isYahooMode, setIsYahooMode] = useState(false);
   const [isVietnamCelebrationOpen, setIsVietnamCelebrationOpen] = useState(false);
-  const [isVietnamTheme, setIsVietnamTheme] = useState(false);
+  const [isVietnamTheme, setIsVietnamTheme] = useState(() => {
+    try {
+      const saved = localStorage.getItem('anonychat_vietnam_theme');
+      return saved !== null ? saved === 'true' : true;
+    } catch {
+      return true;
+    }
+  });
   const [isBuzzing, setIsBuzzing] = useState(false);
   const [easterEggQueue, setEasterEggQueue] = useState([]);
   const lastCelebratedMilestonesRef = useRef({ messages: 0, events: 0 });
@@ -142,8 +149,16 @@ export const ChatApp = ({ onGoHome }) => {
   }, [isRetroMode, playSound]);
 
   const handleToggleVietnamMode = useCallback(() => {
-    setIsVietnamCelebrationOpen(true);
-    setIsVietnamTheme((prev) => !prev);
+    setIsVietnamTheme((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('anonychat_vietnam_theme', String(next));
+      } catch {}
+      if (next) {
+        setIsVietnamCelebrationOpen(true);
+      }
+      return next;
+    });
     playSound?.('message');
   }, [playSound]);
 
@@ -378,7 +393,7 @@ export const ChatApp = ({ onGoHome }) => {
           : isYahooMode
           ? '#431952'
           : isVietnamTheme
-          ? '#180407'
+          ? '#1e0306'
           : '#08090b',
         height: `${viewportHeight}px`,
         paddingBottom: keyboardOffset > 0 ? 'max(0.75rem, env(safe-area-inset-bottom))' : undefined,
@@ -402,10 +417,12 @@ export const ChatApp = ({ onGoHome }) => {
       {/* ── VIETNAM RADIAL AMBIENT GLOW ── */}
       {isVietnamTheme && !isRetroMode && !isYahooMode && (
         <div
-          className="pointer-events-none fixed inset-0 z-0 opacity-40"
+          className="pointer-events-none fixed inset-0 z-0 opacity-65"
           style={{
-            backgroundImage:
-              'radial-gradient(circle at 50% 20%, rgba(218, 37, 29, 0.4) 0%, transparent 65%)'
+            backgroundImage: `
+              radial-gradient(circle at 50% 15%, rgba(218, 37, 29, 0.5) 0%, rgba(120, 10, 15, 0.25) 50%, transparent 80%),
+              radial-gradient(circle at 50% 85%, rgba(180, 20, 25, 0.3) 0%, transparent 60%)
+            `
           }}
         />
       )}
@@ -487,6 +504,7 @@ export const ChatApp = ({ onGoHome }) => {
             onReact={sendReaction}
             onReport={handleOpenReport}
             partnerColor={partnerColor}
+            isVietnamTheme={isVietnamTheme}
           />
           <MessageInput
             onSendMessage={handleSendMessage}
@@ -526,7 +544,13 @@ export const ChatApp = ({ onGoHome }) => {
         isVietnamTheme={isVietnamTheme}
         onClose={() => setIsVietnamCelebrationOpen(false)}
         onToggleVietnamTheme={() => {
-          setIsVietnamTheme((prev) => !prev);
+          setIsVietnamTheme((prev) => {
+            const next = !prev;
+            try {
+              localStorage.setItem('anonychat_vietnam_theme', String(next));
+            } catch {}
+            return next;
+          });
           setIsVietnamCelebrationOpen(false);
         }}
       />

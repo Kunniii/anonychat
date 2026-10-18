@@ -12,7 +12,7 @@ export const ChatContainer = ({ children, isVietnamTheme = false }) => (
       <div
         className={`relative flex h-full min-h-0 w-full flex-col rounded-none sm:rounded-[calc(2rem-0.375rem)] border-0 sm:border transition-all duration-500 overflow-hidden ${
           isVietnamTheme
-            ? 'border-amber-500/30 bg-[#160305] shadow-[inset_0_1px_1px_rgba(255,215,0,0.1)]'
+            ? 'border-amber-500/30 bg-gradient-to-b from-[#3a080f] via-[#240409] to-[#170205] shadow-[0_0_60px_rgba(218,37,29,0.35),inset_0_1px_1px_rgba(255,215,0,0.15)]'
             : 'border-white/[0.06] bg-[#0c0d12] shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]'
         }`}
       >
@@ -21,10 +21,10 @@ export const ChatContainer = ({ children, isVietnamTheme = false }) => (
           <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center select-none overflow-hidden">
             {/* Ambient radial red glow */}
             <div
-              className="absolute inset-0 opacity-50"
+              className="absolute inset-0 opacity-75"
               style={{
                 backgroundImage:
-                  'radial-gradient(circle at 50% 50%, rgba(218, 37, 29, 0.45) 0%, transparent 75%)'
+                  'radial-gradient(circle at 50% 45%, rgba(218, 37, 29, 0.45) 0%, rgba(139, 0, 0, 0.25) 55%, transparent 80%)'
               }}
             />
             <img

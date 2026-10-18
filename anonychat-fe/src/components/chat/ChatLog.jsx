@@ -4,7 +4,14 @@ import SystemMessage from './SystemMessage.jsx';
 import TypingBubble from './TypingBubble.jsx';
 import ChatMessage from './ChatMessage.jsx';
 
-export const ChatLog = ({ messages, isUserConnected, onReact, onReport, partnerColor }) => {
+export const ChatLog = ({
+  messages,
+  isUserConnected,
+  onReact,
+  onReport,
+  partnerColor,
+  isVietnamTheme = false
+}) => {
   const logRef = useRef(null);
 
   useLayoutEffect(() => {
@@ -65,7 +72,7 @@ export const ChatLog = ({ messages, isUserConnected, onReact, onReport, partnerC
               ) : msg.system ? (
                 <SystemMessage message={msg} />
               ) : msg.type === 'typing' ? (
-                <TypingBubble partnerColor={partnerColor} />
+                <TypingBubble partnerColor={partnerColor} isVietnamTheme={isVietnamTheme} />
               ) : (
                 <ChatMessage
                   message={msg.data}
@@ -82,6 +89,7 @@ export const ChatLog = ({ messages, isUserConnected, onReact, onReport, partnerC
                   author={msg.author}
                   onReact={onReact}
                   onReport={onReport}
+                  isVietnamTheme={isVietnamTheme}
                 />
               )}
             </div>
