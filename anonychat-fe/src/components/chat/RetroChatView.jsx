@@ -485,7 +485,7 @@ export const RetroChatView = ({
                 ? 'Nhập tin nhắn vào đây... (gõ "oldschool" để đổi giao diện)'
                 : "Đang đợi người lạ kết nối..."
             }
-            className="flex-1 px-2 py-1 text-xs outline-none"
+            className="flex-1 px-2 py-1 text-[16px] sm:text-xs outline-none"
             style={{
               backgroundColor: isUserConnected ? "#ffffff" : "#e0e0e0",
               color: "#000000",

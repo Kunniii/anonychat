@@ -130,7 +130,7 @@ export const ReportModal = ({ targetMessage, status, onClose, onSubmit }) => {
               rows={2}
               disabled={isPending || isSent}
               placeholder="Thêm mô tả hoặc chỉ rõ từ vi phạm nếu cần..."
-              className="w-full resize-none rounded-xl border border-zinc-700/80 bg-zinc-950/70 p-2.5 text-xs text-zinc-100 placeholder:text-zinc-600 focus:border-zinc-500 focus:outline-none disabled:opacity-60"
+              className="w-full resize-none rounded-xl border border-zinc-700/80 bg-zinc-950/70 p-2.5 text-[16px] sm:text-xs text-zinc-100 placeholder:text-zinc-600 focus:border-zinc-500 focus:outline-none disabled:opacity-60"
             />
           </div>
         </div>

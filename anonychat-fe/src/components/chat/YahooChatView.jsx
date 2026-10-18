@@ -578,7 +578,7 @@ export const YahooChatView = ({
           onChange={handleInputChange}
           disabled={!isUserConnected}
           placeholder={isUserConnected ? 'Nhập tin nhắn (gõ "tiemnet" để đổi giao diện, gõ "buzz" để rung)...' : 'Đang đợi người lạ kết nối...'}
-          className="flex-1 px-3 py-1.5 text-xs rounded border border-[#bda6d6] bg-white text-black outline-none focus:border-[#7b3294] shadow-inner"
+          className="flex-1 px-3 py-1.5 text-[16px] sm:text-xs rounded border border-[#bda6d6] bg-white text-black outline-none focus:border-[#7b3294] shadow-inner"
         />
 
         <button

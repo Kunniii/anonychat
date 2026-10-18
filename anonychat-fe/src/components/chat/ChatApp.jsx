@@ -117,8 +117,6 @@ export const ChatApp = ({ onGoHome }) => {
     setMeta('meta[property="og:description"]', pageDescription);
   }, []);
 
-  const [viewportHeight, setViewportHeight] = useState(() => window.innerHeight);
-  const [keyboardOffset, setKeyboardOffset] = useState(0);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isDonationOpen, setIsDonationOpen] = useState(false);
   const [isRetroMode, setIsRetroMode] = useState(false);
@@ -381,35 +379,46 @@ export const ChatApp = ({ onGoHome }) => {
   }, [activeCelebrationIcon, activeCelebrationIntensity, activeCelebrationRevision]);
 
   useEffect(() => {
-    const updateHeight = () => {
-      const visualViewport = window.visualViewport;
-      const height = visualViewport?.height || window.innerHeight;
-      const offset = visualViewport ? Math.max(0, window.innerHeight - height) : 0;
+    const vv = window.visualViewport;
+    const root = document.documentElement;
 
-      setViewportHeight(height);
-      setKeyboardOffset(offset);
+    let rafId = null;
+    const syncViewport = () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        if (vv) {
+          root.style.setProperty('--chat-vh', `${vv.height}px`);
+          root.style.setProperty('--chat-vv-top', `${vv.offsetTop}px`);
+          // Prevent iOS Safari auto-scroll on input focus
+          if (window.scrollY !== 0 || window.scrollX !== 0) {
+            window.scrollTo(0, 0);
+          }
+        } else {
+          root.style.setProperty('--chat-vh', `${window.innerHeight}px`);
+          root.style.setProperty('--chat-vv-top', '0px');
+        }
+      });
     };
 
-    const resizeHandler = () => {
-      updateHeight();
-    };
-
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', resizeHandler);
-      window.visualViewport.addEventListener('scroll', resizeHandler);
+    if (vv) {
+      vv.addEventListener('resize', syncViewport);
+      vv.addEventListener('scroll', syncViewport);
     } else {
-      window.addEventListener('resize', resizeHandler);
+      window.addEventListener('resize', syncViewport);
     }
 
-    updateHeight();
+    syncViewport();
 
     return () => {
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', resizeHandler);
-        window.visualViewport.removeEventListener('scroll', resizeHandler);
+      if (rafId) cancelAnimationFrame(rafId);
+      if (vv) {
+        vv.removeEventListener('resize', syncViewport);
+        vv.removeEventListener('scroll', syncViewport);
       } else {
-        window.removeEventListener('resize', resizeHandler);
+        window.removeEventListener('resize', syncViewport);
       }
+      root.style.removeProperty('--chat-vh');
+      root.style.removeProperty('--chat-vv-top');
     };
   }, []);
 
@@ -454,7 +463,7 @@ export const ChatApp = ({ onGoHome }) => {
 
   return (
     <div
-      className={`anonychat-app-root fixed inset-0 flex items-center justify-center overflow-hidden font-chat-mono transition-colors duration-300 ${
+      className={`anonychat-app-root fixed left-0 right-0 flex items-center justify-center overflow-hidden font-chat-mono transition-colors duration-300 ${
         isRetroMode ? 'anonychat-retro-root text-black' : isYahooMode ? 'text-zinc-900' : 'text-zinc-100'
       } ${isBuzzing ? 'animate-yahoo-buzz' : ''}`}
       style={{
@@ -465,10 +474,8 @@ export const ChatApp = ({ onGoHome }) => {
           : isVietnamTheme
           ? '#1e0306'
           : '#08090b',
-        height: `${viewportHeight}px`,
-        paddingBottom: keyboardOffset > 0 ? 'max(0.75rem, env(safe-area-inset-bottom))' : undefined,
-        paddingTop: keyboardOffset > 0 ? 'max(0.75rem, env(safe-area-inset-top))' : undefined,
-        justifyContent: keyboardOffset > 0 ? 'flex-start' : 'center'
+        top: 'var(--chat-vv-top, 0px)',
+        height: 'var(--chat-vh, 100dvh)'
       }}
     >
       {!isRetroMode && !isYahooMode && !isVietnamTheme && (

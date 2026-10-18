@@ -21,6 +21,8 @@
   font-family: "Maple Mono", monospace;
   background-color: #08090b;
   color: #f4f4f5;
+  --chat-vh: 100dvh;
+  --chat-vv-top: 0px;
 }
 
 * {
@@ -47,6 +49,11 @@ body {
   background: #08090c;
   color: #f4f4f5;
   overflow-x: hidden;
+}
+
+body:has(.anonychat-app-root) {
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 #root {

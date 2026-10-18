@@ -62,7 +62,7 @@ export const FeedbackModal = ({ status, onClose, onSubmit }) => {
           rows={5}
           disabled={isPending || isSent}
           placeholder="Bạn muốn góp ý điều gì?"
-          className="w-full resize-y rounded-xl border border-zinc-700/80 bg-zinc-950/70 p-3 text-sm leading-relaxed text-zinc-100 placeholder:text-zinc-600 focus:border-zinc-500 focus:outline-none disabled:opacity-60"
+          className="w-full resize-y rounded-xl border border-zinc-700/80 bg-zinc-950/70 p-3 text-[16px] sm:text-sm leading-relaxed text-zinc-100 placeholder:text-zinc-600 focus:border-zinc-500 focus:outline-none disabled:opacity-60"
         />
         <input
           type="text"
@@ -72,7 +72,7 @@ export const FeedbackModal = ({ status, onClose, onSubmit }) => {
           disabled={isPending || isSent}
           placeholder="Tên của bạn (không bắt buộc)"
           aria-label="Tên của bạn (không bắt buộc)"
-          className="mt-3 w-full rounded-xl border border-zinc-700/80 bg-zinc-950/70 p-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-zinc-500 focus:outline-none disabled:opacity-60"
+          className="mt-3 w-full rounded-xl border border-zinc-700/80 bg-zinc-950/70 p-3 text-[16px] sm:text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-zinc-500 focus:outline-none disabled:opacity-60"
         />
         <div className="mt-2 flex items-center justify-between gap-3">
           <p

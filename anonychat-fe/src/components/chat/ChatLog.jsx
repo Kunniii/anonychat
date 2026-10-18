@@ -1,4 +1,4 @@
-import { useRef, useLayoutEffect } from 'react';
+import { useRef, useLayoutEffect, useEffect } from 'react';
 import { MessageSquare } from 'lucide-react';
 import SystemMessage from './SystemMessage.jsx';
 import TypingBubble from './TypingBubble.jsx';
@@ -21,6 +21,24 @@ export const ChatLog = ({
     }
   }, [messages, isUserConnected]);
 
+  // Keep scroll position pinned to bottom when virtual keyboard opens/resizes if user was already at bottom
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    const handleViewportResize = () => {
+      const el = logRef.current;
+      if (!el) return;
+      const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+      if (isNearBottom) {
+        el.scrollTop = el.scrollHeight;
+      }
+    };
+
+    vv.addEventListener('resize', handleViewportResize);
+    return () => vv.removeEventListener('resize', handleViewportResize);
+  }, []);
+
   const lastDeliveredMessageId = [...messages]
     .reverse()
     .find((m) => m.isMine && m.delivered && m.type !== 'typing')?.id;
@@ -28,7 +46,7 @@ export const ChatLog = ({
   return (
     <div
       ref={logRef}
-      className="relative z-10 min-h-0 flex-1 overflow-y-auto bg-transparent p-4 sm:p-6"
+      className="relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain bg-transparent p-4 sm:p-6"
       style={{
         scrollbarWidth: 'thin',
         scrollbarColor: 'rgba(255,255,255,0.12) transparent'

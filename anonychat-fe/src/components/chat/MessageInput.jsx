@@ -273,7 +273,7 @@ export const MessageInput = ({
 
   return (
     <div
-      className={`relative z-10 shrink-0 border-t backdrop-blur-md p-4 sm:p-5 transition-colors duration-500 ${
+      className={`relative z-10 shrink-0 border-t backdrop-blur-md p-4 sm:p-5 pb-[max(1rem,env(safe-area-inset-bottom))] transition-colors duration-500 ${
         isMatrixTheme
           ? 'border-emerald-500/20 bg-[#021308]/85'
           : isVietnamTheme
@@ -310,7 +310,7 @@ export const MessageInput = ({
           }}
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
-          className={`max-h-[140px] min-h-[36px] flex-1 resize-none bg-transparent py-1.5 text-[15.5px] sm:text-[16px] leading-relaxed focus:outline-none disabled:cursor-not-allowed ${
+          className={`max-h-[140px] min-h-[36px] flex-1 resize-none bg-transparent py-1.5 text-[16px] leading-relaxed focus:outline-none disabled:cursor-not-allowed ${
             isMatrixTheme
               ? 'font-mono text-emerald-200 placeholder:text-emerald-500/50'
               : 'text-zinc-100 placeholder:text-zinc-500'
