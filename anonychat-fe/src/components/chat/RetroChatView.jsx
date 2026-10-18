@@ -24,6 +24,8 @@ export const RetroChatView = ({
   onOpenReport,
   onReact,
   onToggleRetroMode,
+  onToggleVietnamMode,
+  onToggleYahooMode,
   customBlockWords = [],
 }) => {
   const [inputText, setInputText] = useState("");
@@ -59,12 +61,22 @@ export const RetroChatView = ({
     if (!inputText.trim() || !isUserConnected) return;
 
     const trimmed = inputText.trim();
-    if (
-      trimmed.toLowerCase() === "oldschool" ||
-      trimmed.toLowerCase() === "/oldschool"
-    ) {
+    const lower = trimmed.toLowerCase();
+    if (lower === "oldschool" || lower === "/oldschool") {
       setInputText("");
       if (onToggleRetroMode) onToggleRetroMode();
+      return;
+    }
+
+    if (lower === "vietnam" || lower === "/vietnam" || lower === "vn" || lower === "/vn") {
+      setInputText("");
+      if (onToggleVietnamMode) onToggleVietnamMode();
+      return;
+    }
+
+    if (lower === "tiemnet" || lower === "/tiemnet" || lower === "yahoo" || lower === "/yahoo") {
+      setInputText("");
+      if (onToggleYahooMode) onToggleYahooMode();
       return;
     }
 

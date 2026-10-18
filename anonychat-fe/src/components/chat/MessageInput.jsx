@@ -7,6 +7,9 @@ export const MessageInput = ({
   onTyping,
   onOpenAdmin,
   onToggleRetroMode,
+  onToggleVietnamMode,
+  onToggleYahooMode,
+  onBuzz,
   isConnected,
   customBlockWords = []
 }) => {
@@ -41,6 +44,30 @@ export const MessageInput = ({
       setMessage('');
       if (onToggleRetroMode) {
         onToggleRetroMode();
+      }
+      return;
+    }
+
+    if (trimmed === 'vietnam' || trimmed === '/vietnam' || trimmed === 'vn' || trimmed === '/vn') {
+      setMessage('');
+      if (onToggleVietnamMode) {
+        onToggleVietnamMode();
+      }
+      return;
+    }
+
+    if (trimmed === 'tiemnet' || trimmed === '/tiemnet' || trimmed === 'yahoo' || trimmed === '/yahoo') {
+      setMessage('');
+      if (onToggleYahooMode) {
+        onToggleYahooMode();
+      }
+      return;
+    }
+
+    if (trimmed === 'buzz' || trimmed === '/buzz') {
+      setMessage('');
+      if (onBuzz) {
+        onBuzz();
       }
       return;
     }

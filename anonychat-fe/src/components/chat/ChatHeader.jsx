@@ -8,7 +8,9 @@ export const ChatHeader = ({
   onEndConversation,
   onOpenReport,
   onOpenDonation,
-  onGoHome
+  onGoHome,
+  isVietnamTheme = false,
+  onToggleVietnamTheme
 }) => (
   <header className="flex shrink-0 items-center justify-between gap-3 p-4 sm:p-5 border-b border-white/[0.06] bg-[#0e0f14]/85 backdrop-blur-md">
     <div className="flex min-w-0 items-center gap-2.5 sm:gap-3.5">
@@ -36,6 +38,17 @@ export const ChatHeader = ({
           {isUserConnected ? 'Đang trò chuyện' : 'Đang tìm người lạ…'}
         </span>
       </div>
+      {isVietnamTheme && (
+        <button
+          type="button"
+          onClick={onToggleVietnamTheme}
+          className="inline-flex items-center gap-1 rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-300 hover:bg-amber-500/20 transition-all cursor-pointer shadow-[0_0_12px_rgba(255,215,0,0.25)]"
+          title="Đang bật Theme Tự Hào Việt Nam (Bấm để tắt)"
+        >
+          <span>🇻🇳</span>
+          <span className="hidden sm:inline">Việt Nam</span>
+        </button>
+      )}
     </div>
     <div className="flex min-w-0 items-center justify-end gap-2">
       <OnlineCounter count={onlineCount} />
