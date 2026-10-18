@@ -618,8 +618,10 @@ const ChatMessage = ({
     ? new Date(timestamp).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false })
     : '';
 
+  const hasReaction = Boolean(peerReaction || ownReaction);
+
   return (
-    <div className={`flex w-full items-start ${isMine ? 'justify-end' : 'justify-start'} my-2`}>
+    <div className={`flex w-full items-start ${isMine ? 'justify-end' : 'justify-start'} ${hasReaction ? 'my-2 mb-4' : 'my-2'}`}>
       <div className={`group relative flex flex-col ${isMine ? 'items-end' : 'items-start'} max-w-[85%] md:max-w-xl lg:max-w-2xl`}>
         {/* Floating reaction picker toolbar */}
         <div
@@ -688,51 +690,57 @@ const ChatMessage = ({
             <span className="block whitespace-pre-wrap">{message}</span>
           )}
 
-          {/* Peer reaction badge overlay */}
-          {peerReaction && (
-            <span className={`absolute ${isMine ? '-left-2.5' : '-right-2.5'} -top-2.5 z-10 inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-[#121318] text-sm shadow-md`}>
-              <span className={reactionAnimation?.emoji === peerReaction ? 'animate-reaction-spring inline-block' : 'inline-block'}>
-                {peerReaction}
-              </span>
-            </span>
-          )}
-
-          {/* Self reaction badge overlay */}
-          {ownReaction && (
+          {/* Unified reaction capsule overlay */}
+          {hasReaction && (
             <span
-              onClick={(e) => {
-                e.stopPropagation();
-                onReact({ index, originIndex, author }, null);
-              }}
-              title="Bỏ reaction của bạn"
-              className={`absolute ${isMine ? '-right-2.5' : '-left-2.5'} -bottom-2.5 z-10 inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-[#121318] text-sm shadow-md hover:scale-110 transition-transform`}
+              className={`absolute ${
+                isMine ? '-bottom-2.5 right-3' : '-bottom-2.5 left-3'
+              } z-10 inline-flex items-center gap-1 rounded-full border border-white/10 bg-[#121318] px-2 py-0.5 text-xs shadow-md`}
             >
-              <span className={reactionAnimation?.emoji === ownReaction ? 'animate-reaction-spring inline-block' : 'inline-block'}>
-                {ownReaction}
-              </span>
+              {peerReaction && (
+                <span
+                  title="Cảm xúc từ người lạ"
+                  className={reactionAnimation?.emoji === peerReaction ? 'animate-reaction-spring inline-block' : 'inline-block'}
+                >
+                  {peerReaction}
+                </span>
+              )}
+              {ownReaction && (
+                <span
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onReact({ index, originIndex, author }, null);
+                  }}
+                  title="Bỏ cảm xúc của bạn"
+                  className={`inline-block cursor-pointer hover:scale-110 transition-transform ${
+                    reactionAnimation?.emoji === ownReaction ? 'animate-reaction-spring' : ''
+                  }`}
+                >
+                  {ownReaction}
+                </span>
+              )}
             </span>
           )}
         </button>
 
         {/* Status indicator under bubble: only if delayed sending (>1s) or peer read dot */}
-        {isMine && !delivered && isDelayedSending && (
-          <div className="mt-1 flex justify-end px-1">
-            <span className="font-mono-clean text-[10px] text-zinc-500 italic">
-              Đang gửi…
-            </span>
-          </div>
-        )}
-
-        {isMine && delivered && isLastDelivered && (
-          <div className="mt-1 flex justify-end px-1">
-            <span
-              title="Người lạ đã nhận và đọc đến tin nhắn này"
-              className="inline-block w-3 h-3 rounded-full ring-2 ring-[#0c0d12] shadow-sm transition-all duration-300"
-              style={{
-                backgroundColor: partnerColor || '#10b981',
-                boxShadow: `0 0 8px ${partnerColor || '#10b981'}80`
-              }}
-            />
+        {((isMine && !delivered && isDelayedSending) || (isMine && delivered && isLastDelivered)) && (
+          <div className={`flex justify-end items-center px-1.5 ${hasReaction ? 'mt-4' : 'mt-1.5'}`}>
+            {isMine && !delivered && isDelayedSending && (
+              <span className="font-mono-clean text-[10px] text-zinc-500 italic">
+                Đang gửi…
+              </span>
+            )}
+            {isMine && delivered && isLastDelivered && (
+              <span
+                title="Người lạ đã nhận và đọc đến tin nhắn này"
+                className="inline-block w-3 h-3 rounded-full ring-2 ring-[#0c0d12] shadow-sm transition-all duration-300"
+                style={{
+                  backgroundColor: partnerColor || '#10b981',
+                  boxShadow: `0 0 8px ${partnerColor || '#10b981'}80`
+                }}
+              />
+            )}
           </div>
         )}
       </div>
