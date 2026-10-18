@@ -947,7 +947,7 @@ const ChatLog = ({ messages, isUserConnected, onReact, onReport, partnerColor })
   return (
     <div
       ref={logRef}
-      className="relative min-h-0 flex-1 overflow-y-auto bg-transparent px-4 sm:px-6 py-4 md:py-5"
+      className="relative min-h-0 flex-1 overflow-y-auto bg-transparent p-4 sm:p-6"
       style={{
         scrollbarWidth: 'thin',
         scrollbarColor: 'rgba(255,255,255,0.12) transparent'
@@ -1151,7 +1151,7 @@ const MessageInput = ({ onSendMessage, onTyping, onOpenAdmin, isConnected, custo
   };
 
   return (
-    <div className="shrink-0 border-t border-white/[0.06] bg-[#0e0f14]/85 backdrop-blur-md px-4 sm:px-6 py-3 sm:py-3.5">
+    <div className="shrink-0 border-t border-white/[0.06] bg-[#0e0f14]/85 backdrop-blur-md p-4 sm:p-5">
       <input
         ref={imageInputRef}
         type="file"
@@ -1537,7 +1537,7 @@ const DonationModal = ({ onClose }) => {
 };
 
 const ChatHeader = ({ onlineCount, hasActiveConversation, isUserConnected, onEndConversation, onOpenDonation, onGoHome }) => (
-  <header className="flex shrink-0 items-center justify-between gap-3 px-4 sm:px-6 py-3 sm:py-3.5 border-b border-white/[0.06] bg-[#0e0f14]/85 backdrop-blur-md">
+  <header className="flex shrink-0 items-center justify-between gap-3 p-4 sm:p-5 border-b border-white/[0.06] bg-[#0e0f14]/85 backdrop-blur-md">
     <div className="flex min-w-0 items-center gap-2.5 sm:gap-3.5">
       {onGoHome && (
         <button
