@@ -399,50 +399,15 @@ export const ChatApp = ({ onGoHome }) => {
         />
       )}
 
-      {/* ── VIETNAM DONG SON WATERMARK & RADIAL GLOW ── */}
+      {/* ── VIETNAM RADIAL AMBIENT GLOW ── */}
       {isVietnamTheme && !isRetroMode && !isYahooMode && (
-        <>
-          <div
-            className="pointer-events-none fixed inset-0 z-0 opacity-40"
-            style={{
-              backgroundImage:
-                'radial-gradient(circle at 50% 20%, rgba(218, 37, 29, 0.4) 0%, transparent 65%)'
-            }}
-          />
-          <div className="pointer-events-none fixed inset-0 z-0 flex items-center justify-center select-none overflow-hidden">
-            <img
-              src="/images/trong-dong.jpg"
-              alt="Họa tiết Trống Đồng Đông Sơn"
-              className="dong-son-gold-overlay w-[750px] h-[750px] sm:w-[950px] sm:h-[950px] max-w-none object-contain opacity-50 drop-shadow-[0_0_35px_rgba(255,215,0,0.35)]"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-                const fallback = document.getElementById('dong-son-svg-motif');
-                if (fallback) fallback.style.display = 'block';
-              }}
-              onLoad={(e) => {
-                const fallback = document.getElementById('dong-son-svg-motif');
-                if (fallback) fallback.style.display = 'none';
-              }}
-            />
-            <svg
-              id="dong-son-svg-motif"
-              viewBox="0 0 500 500"
-              className="w-[480px] h-[480px] fill-none stroke-current opacity-[0.14] text-amber-300 hidden"
-            >
-              <circle cx="250" cy="250" r="230" strokeWidth="4" />
-              <circle cx="250" cy="250" r="200" strokeWidth="2" strokeDasharray="6,4" />
-              <circle cx="250" cy="250" r="160" strokeWidth="3" />
-              <circle cx="250" cy="250" r="120" strokeWidth="2" strokeDasharray="4,4" />
-              <circle cx="250" cy="250" r="80" strokeWidth="3" />
-              <circle cx="250" cy="250" r="40" strokeWidth="2" />
-              <polygon
-                points="250,170 270,230 330,230 280,265 300,325 250,290 200,325 220,265 170,230 230,230"
-                fill="currentColor"
-                strokeWidth="0"
-              />
-            </svg>
-          </div>
-        </>
+        <div
+          className="pointer-events-none fixed inset-0 z-0 opacity-40"
+          style={{
+            backgroundImage:
+              'radial-gradient(circle at 50% 20%, rgba(218, 37, 29, 0.4) 0%, transparent 65%)'
+          }}
+        />
       )}
 
       {activeCelebration && (

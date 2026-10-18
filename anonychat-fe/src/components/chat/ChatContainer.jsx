@@ -30,7 +30,7 @@ export const ChatContainer = ({ children, isVietnamTheme = false }) => (
             <img
               src="/images/trong-dong.jpg"
               alt="Họa tiết Trống Đồng Đông Sơn"
-              className="dong-son-gold-overlay w-[680px] h-[680px] sm:w-[840px] sm:h-[840px] max-w-none object-contain opacity-50 drop-shadow-[0_0_35px_rgba(255,215,0,0.35)]"
+              className="dong-son-gold-overlay w-[800px] h-[800px] sm:w-[960px] sm:h-[960px] md:w-[1100px] md:h-[1100px] max-w-none object-contain opacity-50 drop-shadow-[0_0_20px_rgba(200,140,40,0.15)]"
             />
           </div>
         )}
