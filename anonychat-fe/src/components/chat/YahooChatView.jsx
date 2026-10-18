@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { containsProfanity } from '../../profanity.js';
+import { isMatrixTrigger } from '../../utils/matrixTheme.js';
 
 /**
  * Play authentic Yahoo Messenger dual-tone BUZZ sound using Web Audio API
@@ -55,6 +56,7 @@ export const YahooChatView = ({
   onReact,
   onToggleYahooMode,
   onToggleVietnamMode,
+  onToggleMatrixMode,
   customBlockWords = []
 }) => {
   const [inputText, setInputText] = useState('');
@@ -156,6 +158,12 @@ export const YahooChatView = ({
     ) {
       setInputText('');
       if (onToggleVietnamMode) onToggleVietnamMode();
+      return;
+    }
+
+    if (isMatrixTrigger(trimmed)) {
+      setInputText('');
+      if (onToggleMatrixMode) onToggleMatrixMode();
       return;
     }
 

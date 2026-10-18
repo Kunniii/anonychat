@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { containsProfanity } from "../../profanity.js";
+import { isMatrixTrigger } from "../../utils/matrixTheme.js";
 
 /**
  * Retro 90s Web 1.0 / Windows 95 Interface
@@ -26,6 +27,7 @@ export const RetroChatView = ({
   onToggleRetroMode,
   onToggleVietnamMode,
   onToggleYahooMode,
+  onToggleMatrixMode,
   customBlockWords = [],
 }) => {
   const [inputText, setInputText] = useState("");
@@ -90,6 +92,12 @@ export const RetroChatView = ({
     if (lower === "tiemnet" || lower === "/tiemnet" || lower === "yahoo" || lower === "/yahoo") {
       setInputText("");
       if (onToggleYahooMode) onToggleYahooMode();
+      return;
+    }
+
+    if (isMatrixTrigger(trimmed)) {
+      setInputText("");
+      if (onToggleMatrixMode) onToggleMatrixMode();
       return;
     }
 

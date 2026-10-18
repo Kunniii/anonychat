@@ -1,4 +1,4 @@
-import { ArrowLeft, Heart, LogOut, ShieldAlert, Star } from "lucide-react";
+import { ArrowLeft, Heart, LogOut, ShieldAlert, Star, Terminal } from "lucide-react";
 import OnlineCounter from "../common/OnlineCounter.jsx";
 
 export const ChatHeader = ({
@@ -11,10 +11,14 @@ export const ChatHeader = ({
   onGoHome,
   isVietnamTheme = false,
   onToggleVietnamTheme,
+  isMatrixTheme = false,
+  onToggleMatrixTheme,
 }) => (
   <header
     className={`flex shrink-0 items-center justify-between gap-3 p-4 sm:p-5 border-b backdrop-blur-md relative z-10 transition-colors duration-500 ${
-      isVietnamTheme
+      isMatrixTheme
+        ? "border-emerald-500/20 bg-[#021308]/85"
+        : isVietnamTheme
         ? "border-amber-500/20 bg-[#220407]/85"
         : "border-white/[0.06] bg-[#0e0f14]/85"
     }`}
@@ -41,7 +45,18 @@ export const ChatHeader = ({
           aria-label={isUserConnected ? "Connected" : "Searching"}
         />
       </div>
-      {isVietnamTheme && (
+      {isMatrixTheme && (
+        <button
+          type="button"
+          onClick={onToggleMatrixTheme}
+          className="h-8 shrink-0 inline-flex items-center justify-center gap-1.5 rounded-full border border-emerald-400/50 bg-[#052613] hover:bg-[#07361b] px-3.5 text-xs font-mono font-bold text-emerald-300 transition-all cursor-pointer shadow-[0_0_15px_rgba(16,185,129,0.4)]"
+          title="Đang bật Matrix Mode (Bấm để tắt hoặc mở lại bảng)"
+        >
+          <Terminal className="w-3.5 h-3.5 text-emerald-400" />
+          <span>Matrix</span>
+        </button>
+      )}
+      {!isMatrixTheme && isVietnamTheme && (
         <button
           type="button"
           onClick={onToggleVietnamTheme}

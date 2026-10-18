@@ -14,6 +14,7 @@ import DonationModal from '../modals/DonationModal.jsx';
 import BannedOverlay from '../modals/BannedOverlay.jsx';
 import RetroChatView from './RetroChatView.jsx';
 import VietnamCelebrationOverlay from './VietnamCelebrationOverlay.jsx';
+import MatrixCelebrationOverlay from './MatrixCelebrationOverlay.jsx';
 import YahooChatView from './YahooChatView.jsx';
 
 export const ChatApp = ({ onGoHome }) => {
@@ -123,12 +124,23 @@ export const ChatApp = ({ onGoHome }) => {
   const [isRetroMode, setIsRetroMode] = useState(false);
   const [isYahooMode, setIsYahooMode] = useState(false);
   const [isVietnamCelebrationOpen, setIsVietnamCelebrationOpen] = useState(false);
+  const [isMatrixCelebrationOpen, setIsMatrixCelebrationOpen] = useState(false);
+  const [isMatrixMode, setIsMatrixMode] = useState(() => {
+    try {
+      return localStorage.getItem('anonychat_matrix_mode') === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [isVietnamTheme, setIsVietnamTheme] = useState(() => {
     try {
+      if (localStorage.getItem('anonychat_matrix_mode') === 'true') {
+        return false;
+      }
       const saved = localStorage.getItem('anonychat_vietnam_theme');
-      return saved !== null ? saved === 'true' : true;
+      return saved !== null ? saved === 'true' : false;
     } catch {
-      return true;
+      return false;
     }
   });
   const [isBuzzing, setIsBuzzing] = useState(false);
@@ -137,26 +149,84 @@ export const ChatApp = ({ onGoHome }) => {
   const celebrationRevisionRef = useRef(0);
 
   const handleToggleRetroMode = useCallback(() => {
-    setIsRetroMode((prev) => !prev);
-    if (isYahooMode) setIsYahooMode(false);
+    setIsRetroMode((prev) => {
+      const next = !prev;
+      if (next) {
+        // Reset all other themes to default before activating
+        setIsYahooMode(false);
+        setIsVietnamTheme(false);
+        setIsMatrixMode(false);
+        setIsVietnamCelebrationOpen(false);
+        setIsMatrixCelebrationOpen(false);
+        try {
+          localStorage.setItem('anonychat_vietnam_theme', 'false');
+          localStorage.setItem('anonychat_matrix_mode', 'false');
+        } catch {}
+      }
+      return next;
+    });
     playSound?.('message');
-  }, [isYahooMode, playSound]);
+  }, [playSound]);
 
   const handleToggleYahooMode = useCallback(() => {
-    setIsYahooMode((prev) => !prev);
-    if (isRetroMode) setIsRetroMode(false);
+    setIsYahooMode((prev) => {
+      const next = !prev;
+      if (next) {
+        // Reset all other themes to default before activating
+        setIsRetroMode(false);
+        setIsVietnamTheme(false);
+        setIsMatrixMode(false);
+        setIsVietnamCelebrationOpen(false);
+        setIsMatrixCelebrationOpen(false);
+        try {
+          localStorage.setItem('anonychat_vietnam_theme', 'false');
+          localStorage.setItem('anonychat_matrix_mode', 'false');
+        } catch {}
+      }
+      return next;
+    });
     playSound?.('message');
-  }, [isRetroMode, playSound]);
+  }, [playSound]);
 
   const handleToggleVietnamMode = useCallback(() => {
     setIsVietnamTheme((prev) => {
       const next = !prev;
+      if (next) {
+        // Reset all other themes to default before activating
+        setIsRetroMode(false);
+        setIsYahooMode(false);
+        setIsMatrixMode(false);
+        setIsMatrixCelebrationOpen(false);
+        setIsVietnamCelebrationOpen(true);
+        try {
+          localStorage.setItem('anonychat_matrix_mode', 'false');
+        } catch {}
+      }
       try {
         localStorage.setItem('anonychat_vietnam_theme', String(next));
       } catch {}
+      return next;
+    });
+    playSound?.('message');
+  }, [playSound]);
+
+  const handleToggleMatrixMode = useCallback(() => {
+    setIsMatrixMode((prev) => {
+      const next = !prev;
       if (next) {
-        setIsVietnamCelebrationOpen(true);
+        // Reset all other themes to default before activating
+        setIsRetroMode(false);
+        setIsYahooMode(false);
+        setIsVietnamTheme(false);
+        setIsVietnamCelebrationOpen(false);
+        setIsMatrixCelebrationOpen(true);
+        try {
+          localStorage.setItem('anonychat_vietnam_theme', 'false');
+        } catch {}
       }
+      try {
+        localStorage.setItem('anonychat_matrix_mode', String(next));
+      } catch {}
       return next;
     });
     playSound?.('message');
@@ -463,6 +533,7 @@ export const ChatApp = ({ onGoHome }) => {
             onToggleRetroMode={handleToggleRetroMode}
             onToggleVietnamMode={handleToggleVietnamMode}
             onToggleYahooMode={handleToggleYahooMode}
+            onToggleMatrixMode={handleToggleMatrixMode}
             customBlockWords={customBlockWords}
           />
         </div>
@@ -482,11 +553,12 @@ export const ChatApp = ({ onGoHome }) => {
             onReact={sendReaction}
             onToggleYahooMode={handleToggleYahooMode}
             onToggleVietnamMode={handleToggleVietnamMode}
+            onToggleMatrixMode={handleToggleMatrixMode}
             customBlockWords={customBlockWords}
           />
         </div>
       ) : (
-        <ChatContainer isVietnamTheme={isVietnamTheme}>
+        <ChatContainer isVietnamTheme={isVietnamTheme} isMatrixTheme={isMatrixMode}>
           <ChatHeader
             onlineCount={onlineCount}
             hasActiveConversation={hasActiveConversation}
@@ -497,6 +569,8 @@ export const ChatApp = ({ onGoHome }) => {
             onGoHome={onGoHome}
             isVietnamTheme={isVietnamTheme}
             onToggleVietnamTheme={handleToggleVietnamMode}
+            isMatrixTheme={isMatrixMode}
+            onToggleMatrixTheme={handleToggleMatrixMode}
           />
           <ChatLog
             messages={messages}
@@ -505,6 +579,7 @@ export const ChatApp = ({ onGoHome }) => {
             onReport={handleOpenReport}
             partnerColor={partnerColor}
             isVietnamTheme={isVietnamTheme}
+            isMatrixTheme={isMatrixMode}
           />
           <MessageInput
             onSendMessage={handleSendMessage}
@@ -513,10 +588,12 @@ export const ChatApp = ({ onGoHome }) => {
             onToggleRetroMode={handleToggleRetroMode}
             onToggleVietnamMode={handleToggleVietnamMode}
             onToggleYahooMode={handleToggleYahooMode}
+            onToggleMatrixMode={handleToggleMatrixMode}
             onBuzz={handleBuzz}
             isConnected={isUserConnected}
             customBlockWords={customBlockWords}
             isVietnamTheme={isVietnamTheme}
+            isMatrixTheme={isMatrixMode}
           />
         </ChatContainer>
       )}
@@ -544,14 +621,18 @@ export const ChatApp = ({ onGoHome }) => {
         isVietnamTheme={isVietnamTheme}
         onClose={() => setIsVietnamCelebrationOpen(false)}
         onToggleVietnamTheme={() => {
-          setIsVietnamTheme((prev) => {
-            const next = !prev;
-            try {
-              localStorage.setItem('anonychat_vietnam_theme', String(next));
-            } catch {}
-            return next;
-          });
+          handleToggleVietnamMode();
           setIsVietnamCelebrationOpen(false);
+        }}
+      />
+
+      <MatrixCelebrationOverlay
+        isOpen={isMatrixCelebrationOpen}
+        isMatrixTheme={isMatrixMode}
+        onClose={() => setIsMatrixCelebrationOpen(false)}
+        onToggleMatrixTheme={() => {
+          handleToggleMatrixMode();
+          setIsMatrixCelebrationOpen(false);
         }}
       />
     </div>

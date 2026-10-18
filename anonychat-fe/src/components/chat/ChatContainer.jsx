@@ -1,9 +1,17 @@
-export const ChatContainer = ({ children, isVietnamTheme = false }) => (
+import MatrixRainCanvas from './MatrixRainCanvas.jsx';
+
+export const ChatContainer = ({
+  children,
+  isVietnamTheme = false,
+  isMatrixTheme = false
+}) => (
   <div className="relative h-full min-h-0 w-full flex flex-col items-center justify-center p-0 sm:p-4 md:p-6 lg:p-8">
     {/* Outer Shell for Double-Bezel Architecture */}
     <div
       className={`relative flex h-full min-h-0 w-full max-w-4xl xl:max-w-5xl flex-col rounded-none sm:rounded-[2rem] sm:p-1.5 transition-all duration-500 ${
-        isVietnamTheme
+        isMatrixTheme
+          ? 'sm:bg-emerald-500/10 sm:ring-1 sm:ring-emerald-500/30 shadow-[0_24px_80px_rgba(16,185,129,0.3)]'
+          : isVietnamTheme
           ? 'sm:bg-[#da251d]/10 sm:ring-1 sm:ring-amber-500/30 shadow-[0_24px_80px_rgba(218,37,29,0.35)]'
           : 'sm:bg-white/[0.03] sm:ring-1 sm:ring-white/10 shadow-[0_24px_80px_rgba(0,0,0,0.6)]'
       }`}
@@ -11,13 +19,30 @@ export const ChatContainer = ({ children, isVietnamTheme = false }) => (
       {/* Inner Core */}
       <div
         className={`relative flex h-full min-h-0 w-full flex-col rounded-none sm:rounded-[calc(2rem-0.375rem)] border-0 sm:border transition-all duration-500 overflow-hidden ${
-          isVietnamTheme
+          isMatrixTheme
+            ? 'border-emerald-500/30 bg-[#020a05] shadow-[0_0_60px_rgba(16,185,129,0.25),inset_0_1px_1px_rgba(52,211,153,0.15)]'
+            : isVietnamTheme
             ? 'border-amber-500/30 bg-gradient-to-b from-[#3a080f] via-[#240409] to-[#170205] shadow-[0_0_60px_rgba(218,37,29,0.35),inset_0_1px_1px_rgba(255,215,0,0.15)]'
             : 'border-white/[0.06] bg-[#0c0d12] shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]'
         }`}
       >
+        {/* ── MATRIX DIGITAL RAIN & CRT SCANLINES ── */}
+        {isMatrixTheme && (
+          <div className="pointer-events-none absolute inset-0 z-0 select-none overflow-hidden">
+            <MatrixRainCanvas opacity={0.32} fontSize={15} />
+            {/* Subtle CRT scanline effect */}
+            <div
+              className="absolute inset-0 pointer-events-none opacity-40"
+              style={{
+                backgroundImage:
+                  'repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3) 1px, transparent 1px, transparent 3px)'
+              }}
+            />
+          </div>
+        )}
+
         {/* ── VIETNAM DONG SON OVERLAY DIRECTLY IN CHAT UI BACKGROUND ── */}
-        {isVietnamTheme && (
+        {!isMatrixTheme && isVietnamTheme && (
           <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center select-none overflow-hidden">
             {/* Ambient radial red glow */}
             <div

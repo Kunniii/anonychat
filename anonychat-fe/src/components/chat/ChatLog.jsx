@@ -10,7 +10,8 @@ export const ChatLog = ({
   onReact,
   onReport,
   partnerColor,
-  isVietnamTheme = false
+  isVietnamTheme = false,
+  isMatrixTheme = false
 }) => {
   const logRef = useRef(null);
 
@@ -72,7 +73,11 @@ export const ChatLog = ({
               ) : msg.system ? (
                 <SystemMessage message={msg} />
               ) : msg.type === 'typing' ? (
-                <TypingBubble partnerColor={partnerColor} isVietnamTheme={isVietnamTheme} />
+                <TypingBubble
+                  partnerColor={partnerColor}
+                  isVietnamTheme={isVietnamTheme}
+                  isMatrixTheme={isMatrixTheme}
+                />
               ) : (
                 <ChatMessage
                   message={msg.data}
@@ -90,6 +95,7 @@ export const ChatLog = ({
                   onReact={onReact}
                   onReport={onReport}
                   isVietnamTheme={isVietnamTheme}
+                  isMatrixTheme={isMatrixTheme}
                 />
               )}
             </div>

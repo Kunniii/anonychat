@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Send, Image as ImageIcon } from 'lucide-react';
 import { containsProfanity } from '../../profanity.js';
+import { isMatrixTrigger } from '../../utils/matrixTheme.js';
 
 export const MessageInput = ({
   onSendMessage,
@@ -9,10 +10,12 @@ export const MessageInput = ({
   onToggleRetroMode,
   onToggleVietnamMode,
   onToggleYahooMode,
+  onToggleMatrixMode,
   onBuzz,
   isConnected,
   customBlockWords = [],
-  isVietnamTheme = false
+  isVietnamTheme = false,
+  isMatrixTheme = false
 }) => {
   const [message, setMessage] = useState('');
   const [isProcessingImage, setIsProcessingImage] = useState(false);
@@ -74,6 +77,14 @@ export const MessageInput = ({
       setMessage('');
       if (onToggleYahooMode) {
         onToggleYahooMode();
+      }
+      return;
+    }
+
+    if (isMatrixTrigger(message)) {
+      setMessage('');
+      if (onToggleMatrixMode) {
+        onToggleMatrixMode();
       }
       return;
     }
@@ -205,7 +216,11 @@ export const MessageInput = ({
   return (
     <div
       className={`relative z-10 shrink-0 border-t backdrop-blur-md p-4 sm:p-5 transition-colors duration-500 ${
-        isVietnamTheme ? 'border-amber-500/20 bg-[#220407]/85' : 'border-white/[0.06] bg-[#0e0f14]/85'
+        isMatrixTheme
+          ? 'border-emerald-500/20 bg-[#021308]/85'
+          : isVietnamTheme
+          ? 'border-amber-500/20 bg-[#220407]/85'
+          : 'border-white/[0.06] bg-[#0e0f14]/85'
       }`}
     >
       <input
@@ -219,7 +234,9 @@ export const MessageInput = ({
       />
       <div
         className={`flex items-end gap-2.5 rounded-2xl sm:rounded-[1.375rem] border pl-4 pr-2 py-1.5 sm:py-2 transition-all ${
-          isVietnamTheme
+          isMatrixTheme
+            ? 'border-emerald-500/40 bg-[#041a0e] focus-within:border-emerald-400/80 shadow-[inset_0_1px_1px_rgba(52,211,153,0.1),0_0_15px_rgba(16,185,129,0.2)]'
+            : isVietnamTheme
             ? 'border-amber-500/30 bg-[#1a0407] focus-within:border-amber-400/60 shadow-[inset_0_1px_1px_rgba(255,215,0,0.05),0_0_15px_rgba(218,37,29,0.2)]'
             : 'border-white/[0.08] bg-[#13141a] focus-within:border-white/25 shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]'
         }`}
@@ -235,7 +252,11 @@ export const MessageInput = ({
           }}
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
-          className="max-h-[140px] min-h-[36px] flex-1 resize-none bg-transparent py-1.5 text-[15.5px] sm:text-[16px] leading-relaxed text-zinc-100 placeholder:text-zinc-500 focus:outline-none disabled:cursor-not-allowed"
+          className={`max-h-[140px] min-h-[36px] flex-1 resize-none bg-transparent py-1.5 text-[15.5px] sm:text-[16px] leading-relaxed focus:outline-none disabled:cursor-not-allowed ${
+            isMatrixTheme
+              ? 'font-mono text-emerald-200 placeholder:text-emerald-500/50'
+              : 'text-zinc-100 placeholder:text-zinc-500'
+          }`}
           placeholder={isConnected ? 'Nhập tin nhắn (gõ /admin để gửi góp ý)...' : 'Đang kết nối...'}
           autoComplete="off"
           autoFocus
@@ -266,7 +287,11 @@ export const MessageInput = ({
             type="button"
             onClick={submitMessage}
             disabled={!isConnected || !message.trim()}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white text-zinc-950 font-bold transition-transform hover:scale-105 active:scale-95 disabled:opacity-20 disabled:scale-100 disabled:cursor-not-allowed cursor-pointer"
+            className={`inline-flex h-8 w-8 items-center justify-center rounded-full font-bold transition-transform hover:scale-105 active:scale-95 disabled:opacity-20 disabled:scale-100 disabled:cursor-not-allowed cursor-pointer ${
+              isMatrixTheme
+                ? 'bg-emerald-400 text-zinc-950 hover:bg-emerald-300 shadow-[0_0_12px_rgba(52,211,153,0.5)]'
+                : 'bg-white text-zinc-950'
+            }`}
             aria-label="Gửi tin nhắn"
           >
             <Send className="w-3.5 h-3.5 stroke-[2.2]" />
