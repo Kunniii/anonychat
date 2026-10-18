@@ -1061,7 +1061,7 @@ const MessageInput = ({ onSendMessage, onTyping, onOpenAdmin, isConnected, custo
   };
 
   return (
-    <div className="shrink-0 border-t border-white/[0.06] bg-[#0e0f14]/80 backdrop-blur-md px-3 sm:px-5 py-3 sm:py-3.5 space-y-2">
+    <div className="shrink-0 border-t border-white/[0.06] bg-[#0e0f14]/85 backdrop-blur-md px-4 sm:px-6 py-3 sm:py-3.5">
       <input
         ref={imageInputRef}
         type="file"
@@ -1071,7 +1071,7 @@ const MessageInput = ({ onSendMessage, onTyping, onOpenAdmin, isConnected, custo
         tabIndex={-1}
         aria-label="Chọn hình ảnh"
       />
-      <div className="flex items-end gap-2 rounded-2xl border border-white/[0.08] bg-[#14151b] p-1.5 sm:p-2 focus-within:border-white/20 transition-all">
+      <div className="flex items-center gap-2.5 rounded-full border border-white/[0.08] bg-[#13141a] pl-4 pr-2 py-1.5 sm:py-2 focus-within:border-white/25 transition-all shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]">
         <textarea
           ref={inputRef}
           rows={1}
@@ -1083,45 +1083,47 @@ const MessageInput = ({ onSendMessage, onTyping, onOpenAdmin, isConnected, custo
           }}
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
-          className="max-h-[120px] min-h-[38px] flex-1 resize-none overflow-y-auto bg-transparent px-2 py-2 text-sm leading-6 text-zinc-50 placeholder:text-zinc-500 focus:outline-none disabled:cursor-not-allowed font-sans-clean"
+          className="max-h-[140px] min-h-[36px] flex-1 resize-none bg-transparent py-1.5 text-sm leading-relaxed text-zinc-100 placeholder:text-zinc-500 focus:outline-none disabled:cursor-not-allowed font-sans-clean"
           placeholder={isConnected ? 'Nhập tin nhắn (gõ /admin để gửi góp ý)...' : 'Đang kết nối...'}
           autoComplete="off"
           autoFocus
           disabled={!isConnected}
         />
-        {isConnected ? (
+        <div className="flex items-center gap-1.5 shrink-0">
+          {isConnected ? (
+            <button
+              type="button"
+              onClick={() => imageInputRef.current?.click()}
+              disabled={isProcessingImage}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 transition-colors hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+              aria-label="Gửi hình ảnh"
+              title="Chọn ảnh hoặc dán ảnh bằng Ctrl+V"
+            >
+              <ImageIcon className="h-4 w-4" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={onOpenAdmin}
+              className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-mono-clean text-zinc-400 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+            >
+              góp ý dev
+            </button>
+          )}
           <button
             type="button"
-            onClick={() => imageInputRef.current?.click()}
-            disabled={isProcessingImage}
-            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-zinc-400 transition-colors hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
-            aria-label="Gửi hình ảnh"
-            title="Chọn ảnh hoặc dán ảnh bằng Ctrl+V"
+            onClick={submitMessage}
+            disabled={!isConnected || !message.trim()}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white text-zinc-950 font-bold transition-transform hover:scale-105 active:scale-95 disabled:opacity-20 disabled:scale-100 disabled:cursor-not-allowed cursor-pointer"
+            aria-label="Gửi tin nhắn"
           >
-            <ImageIcon className="h-4 w-4" />
+            <Send className="w-3.5 h-3.5 stroke-[2.2]" />
           </button>
-        ) : (
-          <button
-            type="button"
-            onClick={onOpenAdmin}
-            className="shrink-0 rounded-full px-2.5 py-1.5 text-[11px] font-mono-clean text-zinc-400/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
-          >
-            góp ý dev
-          </button>
-        )}
-        <button
-          type="button"
-          onClick={submitMessage}
-          disabled={!isConnected || !message.trim()}
-          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-zinc-950 font-bold transition-transform hover:scale-105 active:scale-95 disabled:opacity-20 disabled:scale-100 disabled:cursor-not-allowed cursor-pointer"
-          aria-label="Gửi tin nhắn"
-        >
-          <Send className="w-4 h-4 stroke-[2.2]" />
-        </button>
+        </div>
       </div>
       {(attachmentError || profanityError || isProcessingImage) && (
         <p
-          className={`px-2 text-[10px] ${profanityError ? 'text-rose-400' : 'text-zinc-400'}`}
+          className={`mt-2 px-2 text-[11px] ${profanityError ? 'text-rose-400' : 'text-zinc-400'}`}
           role={attachmentError || profanityError ? 'alert' : 'status'}
         >
           {attachmentError || profanityError || 'Đang chuẩn bị hình ảnh…'}
@@ -1496,8 +1498,8 @@ const ChatHeader = ({ onlineCount, hasActiveConversation, isUserConnected, onEnd
 );
 
 const ChatContainer = ({ children }) => (
-  <div className="relative h-full min-h-0 w-full flex flex-col items-center justify-center p-0 sm:p-3 md:p-5 lg:p-6">
-    <div className="relative flex h-full min-h-0 w-full max-w-4xl xl:max-w-5xl flex-col rounded-none sm:rounded-[1.75rem] border-0 sm:border sm:border-white/[0.08] bg-[#0c0d12] shadow-[0_24px_80px_rgba(0,0,0,0.6)] overflow-hidden">
+  <div className="relative h-full min-h-0 w-full flex flex-col items-center justify-center p-0 sm:p-4 md:p-6 lg:p-8">
+    <div className="relative flex h-full min-h-0 w-full max-w-4xl xl:max-w-5xl flex-col rounded-none sm:rounded-2xl border-0 sm:border sm:border-white/[0.08] bg-[#0c0d12] shadow-[0_24px_80px_rgba(0,0,0,0.6)] overflow-hidden">
       {children}
     </div>
   </div>
