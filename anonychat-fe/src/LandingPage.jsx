@@ -60,7 +60,7 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
     },
     {
       q: "Nếu gặp phải người không phù hợp hoặc có hành vi quấy rối?",
-      a: "Bạn có thể bấm ngay nút 'Báo cáo' (biểu tượng chiếc khiên đỏ) trên thanh điều khiển phòng chat. Hệ thống ghi nhận nội dung vi phạm kèm mã định danh đối phương gửi thẳng tới Admin để xem xét và xử lý khóa (Ban). Sau đó, bạn có thể chuyển sang đối tác mới trong vòng 1 giây.",
+      a: "Bạn có thể bấm ngay nút 'Báo cáo' (biểu tượng chiếc khiên đỏ) trên thanh điều khiển phòng chat. Hệ thống ghi nhận nội dung vi phạm và gửi thẳng tới Admin để xem xét và xử lý khóa (Ban). Sau đó, bạn có thể chuyển sang đối tác mới trong vòng 1 giây.",
     },
     {
       q: "Người có hành vi vi phạm sẽ bị xử lý như thế nào?",
