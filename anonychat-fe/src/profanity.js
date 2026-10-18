@@ -206,18 +206,32 @@ const PATTERNS = [
 /**
  * Returns true if `text` contains a profane word/phrase.
  * @param {string} text
+ * @param {string[]} [extraWords=[]]
  * @returns {boolean}
  */
-export function containsProfanity(text) {
+export function containsProfanity(text, extraWords = []) {
   if (!text || typeof text !== 'string') return false;
 
   const norm = normalise(text);
 
-  return PATTERNS.some((pattern) => {
+  const defaultMatched = PATTERNS.some((pattern) => {
     if (pattern instanceof RegExp) {
       return pattern.test(norm);
     }
-    // Plain RegExp already built by loose()
     return pattern.test(norm);
   });
+
+  if (defaultMatched) return true;
+
+  if (Array.isArray(extraWords) && extraWords.length > 0) {
+    return extraWords.some((word) => {
+      if (typeof word !== 'string') return false;
+      const clean = normalise(word.trim());
+      if (!clean) return false;
+      return loose(clean).test(norm);
+    });
+  }
+
+  return false;
 }
+
