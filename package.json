@@ -3,6 +3,11 @@
   "version": "1.0.0",
   "main": "index.js",
   "type": "module",
+  "scripts": {
+    "test": "node tests/profanity.test.mjs && node tests/e2e.test.mjs",
+    "test:profanity": "node tests/profanity.test.mjs",
+    "test:e2e": "node tests/e2e.test.mjs"
+  },
   "author": "Phi Truong <Nguyenairport56@gmail.com>",
   "license": "MIT",
   "dependencies": {
