@@ -587,6 +587,24 @@ const ChatMessage = ({
   onReport
 }) => {
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [isDelayedSending, setIsDelayedSending] = useState(false);
+
+  useEffect(() => {
+    if (isMine && !delivered) {
+      const elapsed = Date.now() - (timestamp || Date.now());
+      if (elapsed >= 1000) {
+        setIsDelayedSending(true);
+      } else {
+        const timer = window.setTimeout(() => {
+          setIsDelayedSending(true);
+        }, Math.max(0, 1000 - elapsed));
+        return () => window.clearTimeout(timer);
+      }
+    } else {
+      setIsDelayedSending(false);
+    }
+  }, [isMine, delivered, timestamp]);
+
   const selectedReaction = reactions?.self ?? null;
   const ownReaction = reactions?.self ?? null;
   const peerReaction = reactions?.peer ?? null;
@@ -651,6 +669,7 @@ const ChatMessage = ({
         {/* Bubble */}
         <button
           type="button"
+          title={formattedTime}
           aria-label="Chạm hoặc nhấn Enter để chọn cảm xúc"
           onClick={() => setPickerOpen((prev) => !prev)}
           className={`animate-chat-message ${isMine ? 'origin-bottom-right' : 'origin-bottom-left'} relative w-fit max-w-full break-words px-4 py-3 text-sm leading-relaxed transition-all duration-200 text-left cursor-pointer ${
@@ -695,33 +714,27 @@ const ChatMessage = ({
           )}
         </button>
 
-        {/* Footer info under bubble */}
-        <div className={`mt-1 flex items-center gap-2 font-mono-clean text-[11px] text-zinc-500 ${isMine ? 'justify-end' : 'justify-start'} px-1`}>
-          <span>{formattedTime}</span>
-          {!isMine && <span>• Người lạ</span>}
-          {isMine && (
-            <div className="flex items-center gap-1.5">
-              {delivered ? (
-                <>
-                  <span className="text-zinc-500">Đã nhận</span>
-                  {/* Dynamic colored circle following the latest delivered message */}
-                  {isLastDelivered && (
-                    <span
-                      title="Người lạ đã nhận và đọc đến tin nhắn này"
-                      className="inline-block w-3.5 h-3.5 rounded-full ring-2 ring-[#0c0d12] shadow-sm transition-all duration-300"
-                      style={{
-                        backgroundColor: partnerColor || '#10b981',
-                        boxShadow: `0 0 10px ${partnerColor || '#10b981'}80`
-                      }}
-                    />
-                  )}
-                </>
-              ) : (
-                <span className="text-zinc-600 italic">Đang gửi…</span>
-              )}
-            </div>
-          )}
-        </div>
+        {/* Status indicator under bubble: only if delayed sending (>1s) or peer read dot */}
+        {isMine && !delivered && isDelayedSending && (
+          <div className="mt-1 flex justify-end px-1">
+            <span className="font-mono-clean text-[10px] text-zinc-500 italic">
+              Đang gửi…
+            </span>
+          </div>
+        )}
+
+        {isMine && delivered && isLastDelivered && (
+          <div className="mt-1 flex justify-end px-1">
+            <span
+              title="Người lạ đã nhận và đọc đến tin nhắn này"
+              className="inline-block w-3 h-3 rounded-full ring-2 ring-[#0c0d12] shadow-sm transition-all duration-300"
+              style={{
+                backgroundColor: partnerColor || '#10b981',
+                boxShadow: `0 0 8px ${partnerColor || '#10b981'}80`
+              }}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
