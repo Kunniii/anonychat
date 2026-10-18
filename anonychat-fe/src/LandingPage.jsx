@@ -1,5 +1,19 @@
 import React, { useState } from "react";
 import confetti from "canvas-confetti";
+import {
+  ArrowUpRight,
+  Heart,
+  Smile,
+  Sparkles,
+  Check,
+  Zap,
+  ShieldCheck,
+  RefreshCw,
+  Image as ImageIcon,
+  MessageSquareCode,
+  Plus,
+  Minus
+} from "lucide-react";
 
 export const LandingPage = ({ onStartChat, onOpenDonation }) => {
   const [activeFaq, setActiveFaq] = useState(null);
@@ -127,18 +141,7 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
               className="inline-flex items-center gap-1.5 rounded-full bg-white text-zinc-950 font-semibold px-3.5 sm:px-4 py-1.5 text-xs transition-all duration-300 ease-spring hover:bg-[#e4e4e7] active:scale-[0.97] cursor-pointer"
             >
               <span>Vào chat</span>
-              <svg
-                viewBox="0 0 16 16"
-                fill="none"
-                className="w-3.5 h-3.5 stroke-current stroke-[2]"
-                aria-hidden="true"
-              >
-                <path
-                  d="M4 12L12 4M12 4H6M12 4V10"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              <ArrowUpRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </header>
@@ -175,18 +178,7 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
           >
             <span>Bắt đầu cuộc trò chuyện</span>
             <span className="w-7 h-7 rounded-full bg-black/10 flex items-center justify-center transition-transform duration-500 ease-spring group-hover:translate-x-1 group-hover:-translate-y-0.5">
-              <svg
-                viewBox="0 0 16 16"
-                fill="none"
-                className="w-3.5 h-3.5 stroke-current stroke-[2]"
-                aria-hidden="true"
-              >
-                <path
-                  d="M4 12L12 4M12 4H6M12 4V10"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              <ArrowUpRight className="w-3.5 h-3.5" />
             </span>
           </button>
 
@@ -310,18 +302,7 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
                   </div>
                   <div className="flex items-center justify-end gap-1.5 mt-1 text-[10px] text-zinc-500 font-mono-clean">
                     <span>Đã chuyển giao</span>
-                    <svg
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      className="w-3 h-3 stroke-emerald-400 stroke-2"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d="M3 8.5L6.5 12L13 4"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
+                    <Check className="w-3 h-3 text-emerald-400 stroke-2" />
                   </div>
                 </div>
               </div>
@@ -343,39 +324,9 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
                         className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-0.5 text-xs text-zinc-300 font-mono-clean"
                       >
                         {r.type === "heart" ? (
-                          <svg
-                            viewBox="0 0 16 16"
-                            fill="currentColor"
-                            className="w-3 h-3 text-rose-400"
-                            aria-hidden="true"
-                          >
-                            <path d="M8 13.5l-5.5-5.5A3.5 3.5 0 017.5 3.2L8 3.7l.5-.5a3.5 3.5 0 015 5L8 13.5z" />
-                          </svg>
+                          <Heart className="w-3 h-3 text-rose-400 fill-rose-400" />
                         ) : (
-                          <svg
-                            viewBox="0 0 16 16"
-                            fill="none"
-                            className="w-3 h-3 stroke-amber-400 stroke-2"
-                            aria-hidden="true"
-                          >
-                            <circle cx="8" cy="8" r="6" />
-                            <path
-                              d="M5.5 10c.8 1 1.7 1.5 2.5 1.5s1.7-.5 2.5-1.5"
-                              strokeLinecap="round"
-                            />
-                            <circle
-                              cx="6"
-                              cy="6.5"
-                              r="0.75"
-                              fill="currentColor"
-                            />
-                            <circle
-                              cx="10"
-                              cy="6.5"
-                              r="0.75"
-                              fill="currentColor"
-                            />
-                          </svg>
+                          <Smile className="w-3 h-3 text-amber-400" />
                         )}
                         <span>{r.count}</span>
                       </span>
@@ -396,14 +347,7 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
                   onClick={() => handleAddMockReaction("heart")}
                   className="rounded-full border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/20 px-3 py-1 text-xs text-zinc-200 transition-colors inline-flex items-center gap-1.5 cursor-pointer"
                 >
-                  <svg
-                    viewBox="0 0 16 16"
-                    fill="currentColor"
-                    className="w-3 h-3 text-rose-400"
-                    aria-hidden="true"
-                  >
-                    <path d="M8 13.5l-5.5-5.5A3.5 3.5 0 017.5 3.2L8 3.7l.5-.5a3.5 3.5 0 015 5L8 13.5z" />
-                  </svg>
+                  <Heart className="w-3 h-3 text-rose-400 fill-rose-400" />
                   <span>Thả tim</span>
                 </button>
                 <button
@@ -411,20 +355,7 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
                   onClick={() => handleAddMockReaction("laugh")}
                   className="rounded-full border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/20 px-3 py-1 text-xs text-zinc-200 transition-colors inline-flex items-center gap-1.5 cursor-pointer"
                 >
-                  <svg
-                    viewBox="0 0 16 16"
-                    fill="none"
-                    className="w-3 h-3 stroke-amber-400 stroke-2"
-                    aria-hidden="true"
-                  >
-                    <circle cx="8" cy="8" r="6" />
-                    <path
-                      d="M5.5 10c.8 1 1.7 1.5 2.5 1.5s1.7-.5 2.5-1.5"
-                      strokeLinecap="round"
-                    />
-                    <circle cx="6" cy="6.5" r="0.75" fill="currentColor" />
-                    <circle cx="10" cy="6.5" r="0.75" fill="currentColor" />
-                  </svg>
+                  <Smile className="w-3 h-3 text-amber-400" />
                   <span>Nụ cười</span>
                 </button>
                 <button
@@ -432,18 +363,7 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
                   onClick={triggerMockConfetti}
                   className="rounded-full border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/20 px-3 py-1 text-xs text-zinc-200 transition-colors inline-flex items-center gap-1.5 cursor-pointer"
                 >
-                  <svg
-                    viewBox="0 0 16 16"
-                    fill="none"
-                    className="w-3 h-3 stroke-sky-400 stroke-2"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M2 14l5-5M9 7l1-3 4-2-2 4-3 1M6 10l-2 1M11 5l1 1"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
+                  <Sparkles className="w-3 h-3 text-sky-400" />
                   <span>Cột mốc chat</span>
                 </button>
               </div>
@@ -489,16 +409,7 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
             <div className="h-full rounded-[calc(2rem-0.375rem)] bg-[#0d0e13] p-7 md:p-8 flex flex-col justify-between shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
               <div>
                 <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-300 mb-6">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    className="w-5 h-5 stroke-current stroke-2"
-                    aria-hidden="true"
-                  >
-                    <circle cx="12" cy="12" r="9" />
-                    <circle cx="12" cy="12" r="5" strokeDasharray="3 3" />
-                    <circle cx="12" cy="12" r="1" fill="currentColor" />
-                  </svg>
+                  <Zap className="w-5 h-5" />
                 </div>
                 <h3 className="text-xl font-medium text-white tracking-tight">
                   Ghép cặp 1-1 thần tốc
@@ -525,18 +436,7 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
             <div className="h-full rounded-[calc(2rem-0.375rem)] bg-[#0d0e13] p-7 md:p-8 flex flex-col justify-between shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
               <div>
                 <div className="w-10 h-10 rounded-2xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-300 mb-6">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    className="w-5 h-5 stroke-current stroke-2"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
+                  <ShieldCheck className="w-5 h-5" />
                 </div>
                 <h3 className="text-xl font-medium text-white tracking-tight">
                   Tuyệt đối riêng tư
@@ -558,23 +458,7 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
             <div className="h-full rounded-[calc(2rem-0.375rem)] bg-[#0d0e13] p-7 md:p-8 flex flex-col justify-between shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
               <div>
                 <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-300 mb-6">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    className="w-5 h-5 stroke-current stroke-2"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M23 4v6h-6M1 20v-6h6"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <path
-                      d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
+                  <RefreshCw className="w-5 h-5" />
                 </div>
                 <h3 className="text-lg font-medium text-white tracking-tight">
                   Hồi phục kết nối 120s
@@ -595,20 +479,7 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
             <div className="h-full rounded-[calc(2rem-0.375rem)] bg-[#0d0e13] p-7 md:p-8 flex flex-col justify-between shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
               <div>
                 <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-300 mb-6">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    className="w-5 h-5 stroke-current stroke-2"
-                    aria-hidden="true"
-                  >
-                    <rect x="3" y="3" width="18" height="18" rx="2" />
-                    <circle cx="8.5" cy="8.5" r="1.5" />
-                    <path
-                      d="M21 15l-5-5L5 21"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
+                  <ImageIcon className="w-5 h-5" />
                 </div>
                 <h3 className="text-lg font-medium text-white tracking-tight">
                   Tín hiệu &amp; Ảnh nén tối ưu
@@ -629,18 +500,7 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
             <div className="h-full rounded-[calc(2rem-0.375rem)] bg-[#0d0e13] p-7 md:p-8 flex flex-col justify-between shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
               <div>
                 <div className="w-10 h-10 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-300 mb-6">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    className="w-5 h-5 stroke-current stroke-2"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
+                  <MessageSquareCode className="w-5 h-5" />
                 </div>
                 <h3 className="text-lg font-medium text-white tracking-tight">
                   Kênh tâm sự nhà phát triển
@@ -769,8 +629,8 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
                   <span className="text-base sm:text-lg font-medium text-zinc-200 group-hover:text-white transition-colors">
                     {faq.q}
                   </span>
-                  <span className="w-7 h-7 rounded-full border border-white/10 flex items-center justify-center shrink-0 text-sm font-mono-clean text-zinc-400 group-hover:text-white group-hover:border-white/20 transition-all">
-                    {isOpen ? "−" : "+"}
+                  <span className="w-7 h-7 rounded-full border border-white/10 flex items-center justify-center shrink-0 text-zinc-400 group-hover:text-white group-hover:border-white/20 transition-all">
+                    {isOpen ? <Minus className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
                   </span>
                 </button>
                 {isOpen && (
@@ -805,18 +665,7 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
           >
             <span>Vào phòng trò chuyện</span>
             <span className="w-8 h-8 rounded-full bg-black/10 flex items-center justify-center transition-transform duration-500 ease-spring group-hover:translate-x-1 group-hover:-translate-y-0.5">
-              <svg
-                viewBox="0 0 16 16"
-                fill="none"
-                className="w-4 h-4 stroke-current stroke-[2]"
-                aria-hidden="true"
-              >
-                <path
-                  d="M4 12L12 4M12 4H6M12 4V10"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              <ArrowUpRight className="w-4 h-4 stroke-[2]" />
             </span>
           </button>
         </div>
@@ -843,9 +692,6 @@ export const LandingPage = ({ onStartChat, onOpenDonation }) => {
             >
               Phòng chat (/chats)
             </button>
-            <a href="/admin" className="hover:text-zinc-300 transition-colors">
-              Quản trị (/admin)
-            </a>
             {onOpenDonation && (
               <button
                 type="button"

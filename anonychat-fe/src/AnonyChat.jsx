@@ -1,11 +1,32 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import confetti from 'canvas-confetti';
+import {
+  ArrowLeft,
+  Heart,
+  LogOut,
+  Send,
+  Image as ImageIcon,
+  Flag,
+  MessageSquare,
+  X
+} from 'lucide-react';
 import { containsProfanity } from './profanity.js';
 import AdminConsole from './AdminConsole.jsx';
 import LandingPage from './LandingPage.jsx';
 
 const REACTION_EMOJIS = ['❤️', '😂', '😮', '😢', '👍'];
 const ACTIVITY_MILESTONES = [10, 25, 50, 100, 250, 500, 1000];
+const PARTNER_COLORS = [
+  '#10b981', // emerald
+  '#06b6d4', // cyan
+  '#3b82f6', // blue
+  '#8b5cf6', // violet
+  '#ec4899', // pink
+  '#f59e0b', // amber
+  '#14b8a6', // teal
+  '#f43f5e'  // rose
+];
+const getRandomPartnerColor = () => PARTNER_COLORS[Math.floor(Math.random() * PARTNER_COLORS.length)];
 const EVENT_ICONS = {
   text: '💬',
   image: '🖼️',
@@ -69,6 +90,7 @@ const useWebSocket = (playSound) => {
   const [activityEventCount, setActivityEventCount] = useState(0);
   const [feedbackStatus, setFeedbackStatus] = useState(null);
   const [customBlockWords, setCustomBlockWords] = useState([]);
+  const [partnerColor, setPartnerColor] = useState(getRandomPartnerColor);
   const activityEventCountRef = useRef(0);
   const eventMilestoneTypesRef = useRef(new Map());
   const typingTimeoutRef = useRef(null);
@@ -305,6 +327,7 @@ const useWebSocket = (playSound) => {
           setHasActiveConversation(true);
           if (!isReconnecting) {
             setMessages([]);
+            setPartnerColor(getRandomPartnerColor());
             nextMessageIndexRef.current = 0;
             setActivityEventCount(0);
             activityEventCountRef.current = 0;
@@ -542,7 +565,8 @@ const useWebSocket = (playSound) => {
     onlineCount,
     activityEventCount,
     eventMilestoneTypesRef,
-    customBlockWords
+    customBlockWords,
+    partnerColor
   };
 };
 
@@ -551,6 +575,9 @@ const ChatMessage = ({
   image,
   isMine,
   delivered,
+  isLastDelivered,
+  partnerColor,
+  timestamp,
   reactions,
   reactionAnimation,
   index,
@@ -569,11 +596,18 @@ const ChatMessage = ({
     if (sent) setPickerOpen(false);
   };
 
+  const formattedTime = timestamp
+    ? new Date(timestamp).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false })
+    : '';
+
   return (
-    <div className={`flex w-full items-start ${isMine ? 'justify-end' : 'justify-start'}`}>
-      <div className={`group relative w-fit max-w-[82%] ${(ownReaction || peerReaction) ? 'pb-5' : ''} ${isMine ? 'text-right' : 'text-left'}`}>
+    <div className={`flex w-full items-start ${isMine ? 'justify-end' : 'justify-start'} my-2`}>
+      <div className={`group relative flex flex-col ${isMine ? 'items-end' : 'items-start'} max-w-[85%] md:max-w-xl lg:max-w-2xl`}>
+        {/* Floating reaction picker toolbar */}
         <div
-          className={`absolute -top-10 z-10 flex items-center gap-1 rounded-full border border-zinc-700/80 bg-zinc-950 p-1 shadow-[0_4px_16px_rgba(0,0,0,0.35)] opacity-0 pointer-events-none transition-opacity group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100 ${isMine ? 'right-0' : 'left-0'} ${pickerOpen ? 'pointer-events-auto opacity-100' : ''}`}
+          className={`absolute -top-11 z-20 flex items-center gap-1 rounded-full border border-white/10 bg-[#121318]/95 p-1 shadow-[0_8px_24px_rgba(0,0,0,0.5)] opacity-0 pointer-events-none transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100 ${
+            isMine ? 'right-0' : 'left-0'
+          } ${pickerOpen ? 'pointer-events-auto opacity-100' : ''}`}
           role="group"
           aria-label="Chọn cảm xúc"
         >
@@ -584,7 +618,9 @@ const ChatMessage = ({
               aria-label={`Phản ứng ${emoji}`}
               aria-pressed={selectedReaction === emoji}
               onClick={() => handleReaction(emoji)}
-              className={`flex h-8 w-8 items-center justify-center rounded-full text-base transition-colors hover:bg-zinc-800 ${selectedReaction === emoji ? 'bg-zinc-800' : ''}`}
+              className={`flex h-8 w-8 items-center justify-center rounded-full text-base transition-colors hover:bg-white/10 ${
+                selectedReaction === emoji ? 'bg-white/15' : ''
+              }`}
             >
               {emoji}
             </button>
@@ -594,9 +630,9 @@ const ChatMessage = ({
               type="button"
               aria-label="Bỏ reaction"
               onClick={() => handleReaction(null)}
-              className="flex h-8 w-8 items-center justify-center rounded-full text-lg text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-100"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 transition-colors hover:bg-white/10 hover:text-white"
             >
-              ×
+              <X className="w-3.5 h-3.5" />
             </button>
           )}
           {!isMine && onReport && (
@@ -605,64 +641,87 @@ const ChatMessage = ({
               aria-label="Báo cáo tin nhắn"
               title="Báo cáo nội dung vi phạm"
               onClick={() => onReport({ text: message || '[ảnh]', image: !!image })}
-              className="flex h-8 w-8 items-center justify-center rounded-full text-sm text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-rose-400"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-500 transition-colors hover:bg-white/10 hover:text-rose-400"
             >
-              🚩
+              <Flag className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
+
+        {/* Bubble */}
         <button
           type="button"
           aria-label="Chạm hoặc nhấn Enter để chọn cảm xúc"
-          onClick={() => setPickerOpen(true)}
-          className={`animate-chat-message ${isMine ? 'origin-bottom-right' : 'origin-bottom-left'} w-fit max-w-full break-words rounded-[1.35rem] border px-3 py-2.5 text-sm leading-relaxed transition-colors duration-200 ${isMine
-            ? delivered
-              ? 'ml-auto border-emerald-500/20 bg-emerald-500/[0.035] text-zinc-100'
-              : 'ml-auto border-amber-500/25 bg-amber-500/[0.06] text-zinc-100'
-            : 'mr-auto border-zinc-800 bg-zinc-900/50 text-zinc-100'
-            }`}
+          onClick={() => setPickerOpen((prev) => !prev)}
+          className={`animate-chat-message ${isMine ? 'origin-bottom-right' : 'origin-bottom-left'} relative w-fit max-w-full break-words px-4 py-3 text-sm leading-relaxed transition-all duration-200 text-left cursor-pointer ${
+            isMine
+              ? 'rounded-2xl rounded-tr-sm bg-white text-zinc-950 font-medium shadow-[0_2px_12px_rgba(255,255,255,0.06)]'
+              : 'rounded-2xl rounded-tl-sm bg-[#16171d] border border-white/[0.08] text-zinc-100'
+          }`}
         >
           {image ? (
             <img
               src={image}
-              alt="Ảnh được gửi trong cuộc trò chuyện"
-              className="max-h-80 max-w-full rounded-lg object-contain"
+              alt="Ảnh trong cuộc trò chuyện"
+              className="max-h-96 max-w-full rounded-xl object-contain"
             />
           ) : (
-            <span className="block whitespace-pre-wrap text-left">{message}</span>
+            <span className="block whitespace-pre-wrap">{message}</span>
           )}
-        </button>
-        {peerReaction && (
-          <div className={`absolute ${isMine ? '-left-3' : '-right-3'} -top-3 z-10 flex h-9 w-9 items-center justify-center text-2xl`} aria-label="Reaction của người chat cùng">
-            <span className="rotate-12">
-              <span
-                key={`peer-${reactionAnimation?.emoji === peerReaction ? reactionAnimation.revision : 0}`}
-                className={reactionAnimation?.emoji === peerReaction ? 'animate-reaction-spring inline-block' : 'inline-block'}
-              >
+
+          {/* Peer reaction badge overlay */}
+          {peerReaction && (
+            <span className={`absolute ${isMine ? '-left-2.5' : '-right-2.5'} -top-2.5 z-10 inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-[#121318] text-sm shadow-md`}>
+              <span className={reactionAnimation?.emoji === peerReaction ? 'animate-reaction-spring inline-block' : 'inline-block'}>
                 {peerReaction}
               </span>
             </span>
-          </div>
-        )}
-        {ownReaction && (
-          <button
-            type="button"
-            aria-label={`${ownReaction} reaction của bạn, bỏ reaction`}
-            aria-pressed="true"
-            onClick={() => onReact({ index, originIndex, author }, null)}
-            className={`absolute -bottom-1 ${isMine ? '-right-2' : '-left-2'} z-10 inline-flex h-9 w-9 items-center justify-center border-0 bg-transparent p-0 text-2xl`}
-            title="Bỏ reaction của bạn"
-          >
-            <span className="-rotate-12">
-              <span
-                key={`self-${reactionAnimation?.emoji === ownReaction ? reactionAnimation.revision : 0}`}
-                className={reactionAnimation?.emoji === ownReaction ? 'animate-reaction-spring inline-block' : 'inline-block'}
-              >
+          )}
+
+          {/* Self reaction badge overlay */}
+          {ownReaction && (
+            <span
+              onClick={(e) => {
+                e.stopPropagation();
+                onReact({ index, originIndex, author }, null);
+              }}
+              title="Bỏ reaction của bạn"
+              className={`absolute ${isMine ? '-right-2.5' : '-left-2.5'} -bottom-2.5 z-10 inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-[#121318] text-sm shadow-md hover:scale-110 transition-transform`}
+            >
+              <span className={reactionAnimation?.emoji === ownReaction ? 'animate-reaction-spring inline-block' : 'inline-block'}>
                 {ownReaction}
               </span>
             </span>
-          </button>
-        )}
+          )}
+        </button>
+
+        {/* Footer info under bubble */}
+        <div className={`mt-1 flex items-center gap-2 font-mono-clean text-[11px] text-zinc-500 ${isMine ? 'justify-end' : 'justify-start'} px-1`}>
+          <span>{formattedTime}</span>
+          {!isMine && <span>• Người lạ</span>}
+          {isMine && (
+            <div className="flex items-center gap-1.5">
+              {delivered ? (
+                <>
+                  <span className="text-zinc-500">Đã nhận</span>
+                  {/* Dynamic colored circle following the latest delivered message */}
+                  {isLastDelivered && (
+                    <span
+                      title="Người lạ đã nhận và đọc đến tin nhắn này"
+                      className="inline-block w-3.5 h-3.5 rounded-full ring-2 ring-[#0c0d12] shadow-sm transition-all duration-300"
+                      style={{
+                        backgroundColor: partnerColor || '#10b981',
+                        boxShadow: `0 0 10px ${partnerColor || '#10b981'}80`
+                      }}
+                    />
+                  )}
+                </>
+              ) : (
+                <span className="text-zinc-600 italic">Đang gửi…</span>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -734,15 +793,24 @@ const SystemMessage = ({ message }) => {
   );
 };
 
-const TypingBubble = () => (
+const TypingBubble = ({ partnerColor }) => (
   <div
-    className="mr-auto flex w-fit items-center gap-1.5 rounded-[1.35rem] border border-zinc-800 bg-zinc-900/50 px-4 py-3"
+    className="mr-auto my-2 flex w-fit items-center gap-2 rounded-2xl rounded-tl-sm border border-white/[0.08] bg-[#16171d] px-4 py-3"
     role="status"
     aria-label="Người lạ đang nhập"
   >
-    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-zinc-400" />
-    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-zinc-400 [animation-delay:150ms]" />
-    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-zinc-400 [animation-delay:300ms]" />
+    <span
+      className="h-2 w-2 rounded-full animate-bounce"
+      style={{ backgroundColor: partnerColor || '#a1a1aa' }}
+    />
+    <span
+      className="h-2 w-2 rounded-full animate-bounce [animation-delay:150ms]"
+      style={{ backgroundColor: partnerColor || '#a1a1aa' }}
+    />
+    <span
+      className="h-2 w-2 rounded-full animate-bounce [animation-delay:300ms]"
+      style={{ backgroundColor: partnerColor || '#a1a1aa' }}
+    />
   </div>
 );
 
@@ -763,16 +831,17 @@ const OnlineCounter = ({ count }) => {
 
   return (
     <div
-      className={`inline-flex items-center gap-1 whitespace-nowrap text-[9px] font-medium uppercase tracking-[0.08em] text-zinc-300 transition-all duration-300 sm:gap-2 sm:text-[10px] sm:tracking-[0.12em] ${isAnimating ? 'scale-[1.02]' : 'scale-100'
-        }`}
+      className={`inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[11px] font-mono-clean text-zinc-300 transition-all duration-300 ${
+        isAnimating ? 'scale-[1.03]' : 'scale-100'
+      }`}
     >
       <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-      {count ?? 0} online
+      <span>{count ?? 0} online</span>
     </div>
   );
 };
 
-const ChatLog = ({ messages, isUserConnected, onReact, onReport }) => {
+const ChatLog = ({ messages, isUserConnected, onReact, onReport, partnerColor }) => {
   const logRef = useRef(null);
 
   useLayoutEffect(() => {
@@ -781,30 +850,37 @@ const ChatLog = ({ messages, isUserConnected, onReact, onReport }) => {
     }
   }, [messages, isUserConnected]);
 
+  const lastDeliveredMessageId = [...messages]
+    .reverse()
+    .find((m) => m.isMine && m.delivered && m.type !== 'typing')?.id;
+
   return (
     <div
       ref={logRef}
-      className="relative min-h-0 flex-1 overflow-y-auto rounded-[1.5rem] border border-zinc-800/80 bg-[#0a0a0b] p-3 md:p-4"
+      className="relative min-h-0 flex-1 overflow-y-auto bg-transparent px-4 sm:px-6 py-4 md:py-5"
       style={{
         scrollbarWidth: 'thin',
-        scrollbarColor: 'rgba(255,255,255,0.14) transparent'
+        scrollbarColor: 'rgba(255,255,255,0.12) transparent'
       }}
     >
       {messages.length === 0 ? (
-        <div className="flex h-full min-h-[220px] items-center justify-center p-4 text-center">
-          <div className="max-w-xs">
-            <h2 className="mt-3 text-lg font-medium text-zinc-100">
-              {isUserConnected ? 'Bạn đang ở trong phòng.' : 'Đang chờ người lạ...'}
+        <div className="flex h-full min-h-[240px] items-center justify-center p-6 text-center">
+          <div className="max-w-sm">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-white/[0.04] border border-white/[0.08] text-zinc-400">
+              <MessageSquare className="h-6 w-6 stroke-[1.8]" />
+            </div>
+            <h2 className="font-editorial text-xl sm:text-2xl font-light text-white tracking-tight">
+              {isUserConnected ? 'Đã kết nối với người lạ' : 'Đang tìm kiếm người trò chuyện…'}
             </h2>
-            <p className="mt-2 text-sm leading-relaxed text-zinc-400">
+            <p className="mt-2 text-xs sm:text-sm text-zinc-400 leading-relaxed font-sans-clean">
               {isUserConnected
-                ? 'Hãy chào hỏi và giữ cuộc trò chuyện .'
-                : 'Bạn sẽ có thể chat khi có ai đó tham gia.'}
+                ? 'Hãy gửi lời chào đầu tiên một cách lịch sự và tự nhiên.'
+                : 'Hệ thống đang ghép cặp ngẫu nhiên. Xin bạn chờ trong giây lát.'}
             </p>
           </div>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {messages.map((msg, idx) => (
             <div key={msg.index ?? msg.id ?? `${msg.timestamp}-${idx}`}>
               {msg.announcement ? (
@@ -815,13 +891,16 @@ const ChatLog = ({ messages, isUserConnected, onReact, onReport }) => {
               ) : msg.system ? (
                 <SystemMessage message={msg} />
               ) : msg.type === 'typing' ? (
-                <TypingBubble />
+                <TypingBubble partnerColor={partnerColor} />
               ) : (
                 <ChatMessage
                   message={msg.data}
                   image={msg.type === 'image' ? msg.data : null}
                   isMine={msg.isMine}
                   delivered={msg.delivered}
+                  isLastDelivered={msg.id === lastDeliveredMessageId}
+                  partnerColor={partnerColor}
+                  timestamp={msg.timestamp}
                   reactions={msg.reactions}
                   reactionAnimation={msg.reactionAnimation}
                   index={msg.index}
@@ -982,7 +1061,7 @@ const MessageInput = ({ onSendMessage, onTyping, onOpenAdmin, isConnected, custo
   };
 
   return (
-    <div className="shrink-0 space-y-2">
+    <div className="shrink-0 border-t border-white/[0.06] bg-[#0e0f14]/80 backdrop-blur-md px-3 sm:px-5 py-3 sm:py-3.5 space-y-2">
       <input
         ref={imageInputRef}
         type="file"
@@ -992,7 +1071,7 @@ const MessageInput = ({ onSendMessage, onTyping, onOpenAdmin, isConnected, custo
         tabIndex={-1}
         aria-label="Chọn hình ảnh"
       />
-      <div className="flex items-center gap-2 rounded-[1.5rem] border border-zinc-800/80 bg-[#0a0a0b] p-2 transition-all duration-200 focus-within:ring-1 focus-within:ring-zinc-700/80 md:p-3">
+      <div className="flex items-end gap-2 rounded-2xl border border-white/[0.08] bg-[#14151b] p-1.5 sm:p-2 focus-within:border-white/20 transition-all">
         <textarea
           ref={inputRef}
           rows={1}
@@ -1004,8 +1083,8 @@ const MessageInput = ({ onSendMessage, onTyping, onOpenAdmin, isConnected, custo
           }}
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
-          className="max-h-[120px] min-h-[40px] flex-1 resize-none overflow-y-auto bg-transparent px-1.5 py-2 text-sm leading-6 text-zinc-50 placeholder:text-zinc-500 focus:outline-none disabled:cursor-not-allowed"
-          placeholder={isConnected ? 'Nhập tin nhắn hoặc dán ảnh...' : 'Đang kết nối...'}
+          className="max-h-[120px] min-h-[38px] flex-1 resize-none overflow-y-auto bg-transparent px-2 py-2 text-sm leading-6 text-zinc-50 placeholder:text-zinc-500 focus:outline-none disabled:cursor-not-allowed font-sans-clean"
+          placeholder={isConnected ? 'Nhập tin nhắn (gõ /admin để gửi góp ý)...' : 'Đang kết nối...'}
           autoComplete="off"
           autoFocus
           disabled={!isConnected}
@@ -1015,43 +1094,29 @@ const MessageInput = ({ onSendMessage, onTyping, onOpenAdmin, isConnected, custo
             type="button"
             onClick={() => imageInputRef.current?.click()}
             disabled={isProcessingImage}
-            className="inline-flex items-center justify-center rounded-full p-2.5 text-zinc-400 transition-all duration-200 hover:bg-zinc-800 hover:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-40 active:scale-[0.98]"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-zinc-400 transition-colors hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
             aria-label="Gửi hình ảnh"
             title="Chọn ảnh hoặc dán ảnh bằng Ctrl+V"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
-              <path d="M21 11.5 12.5 20a5 5 0 0 1-7.1-7.1l9.2-9.2a3.3 3.3 0 0 1 4.7 4.7l-9.2 9.2a1.7 1.7 0 0 1-2.4-2.4l8.5-8.5" />
-            </svg>
+            <ImageIcon className="h-4 w-4" />
           </button>
         ) : (
           <button
             type="button"
             onClick={onOpenAdmin}
-            className="shrink-0 rounded-lg px-2 py-2 text-[10px] text-zinc-400/70 transition-colors hover:bg-zinc-800/70 hover:text-zinc-200 active:scale-[0.98]"
+            className="shrink-0 rounded-full px-2.5 py-1.5 text-[11px] font-mono-clean text-zinc-400/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
           >
-            chửi admin
+            góp ý dev
           </button>
         )}
         <button
           type="button"
           onClick={submitMessage}
           disabled={!isConnected || !message.trim()}
-          className="inline-flex items-center justify-center rounded-full bg-zinc-100 p-2.5 text-zinc-900 transition-all duration-200 hover:bg-white disabled:cursor-not-allowed disabled:opacity-40 active:scale-[0.98]"
+          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-zinc-950 font-bold transition-transform hover:scale-105 active:scale-95 disabled:opacity-20 disabled:scale-100 disabled:cursor-not-allowed cursor-pointer"
           aria-label="Gửi tin nhắn"
         >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="h-3.5 w-3.5"
-            aria-hidden="true"
-          >
-            <path d="M5 12h12" />
-            <path d="M13 5l7 7-7 7" />
-          </svg>
+          <Send className="w-4 h-4 stroke-[2.2]" />
         </button>
       </div>
       {(attachmentError || profanityError || isProcessingImage) && (
@@ -1111,10 +1176,10 @@ const FeedbackModal = ({ status, onClose, onSubmit }) => {
             type="button"
             onClick={onClose}
             disabled={isPending}
-            className="rounded-md px-2 py-1 text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-zinc-200 disabled:opacity-40"
+            className="rounded-md p-1.5 text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-zinc-200 disabled:opacity-40"
             aria-label="Đóng"
           >
-            ×
+            <X className="w-4 h-4" />
           </button>
         </div>
         <textarea
@@ -1215,10 +1280,10 @@ const ReportModal = ({ targetMessage, status, onClose, onSubmit }) => {
             type="button"
             onClick={onClose}
             disabled={isPending}
-            className="rounded-md px-2 py-1 text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-zinc-200 disabled:opacity-40"
+            className="rounded-md p-1.5 text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-zinc-200 disabled:opacity-40"
             aria-label="Đóng"
           >
-            ×
+            <X className="w-4 h-4" />
           </button>
         </div>
 
@@ -1350,15 +1415,13 @@ const DonationModal = ({ onClose }) => {
           ref={closeButtonRef}
           type="button"
           onClick={onClose}
-          className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full text-xl leading-none text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-zinc-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-300"
+          className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-zinc-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-300"
           aria-label="Đóng cửa sổ ủng hộ"
         >
-          ×
+          <X className="w-4 h-4" />
         </button>
         <div className="mx-auto mb-3 inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-rose-400/10 text-rose-300">
-          <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true">
-            <path d="M12 21s-8.25-4.73-8.25-11.06A4.69 4.69 0 0 1 12 7.26a4.69 4.69 0 0 1 8.25 2.68C20.25 16.27 12 21 12 21Z" />
-          </svg>
+          <Heart className="h-5 w-5 fill-current" />
         </div>
         <h2 id="donation-title" className="text-base font-semibold text-zinc-100">
           Ủng hộ AnonyChat
@@ -1382,55 +1445,61 @@ const DonationModal = ({ onClose }) => {
 };
 
 const ChatHeader = ({ onlineCount, hasActiveConversation, isUserConnected, onEndConversation, onOpenDonation, onGoHome }) => (
-  <div className="flex shrink-0 items-center justify-between gap-1.5 rounded-[1.05rem] border border-zinc-800/80 bg-[#111214]/80 px-2.5 py-2.5 sm:gap-2 md:px-4 md:py-3">
-    <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+  <header className="flex shrink-0 items-center justify-between gap-3 px-4 sm:px-6 py-3 sm:py-3.5 border-b border-white/[0.06] bg-[#0e0f14]/85 backdrop-blur-md">
+    <div className="flex min-w-0 items-center gap-2.5 sm:gap-3.5">
       {onGoHome && (
         <button
           type="button"
           onClick={onGoHome}
-          className="inline-flex min-h-8 shrink-0 items-center justify-center gap-1 rounded-full border border-zinc-800 bg-zinc-900/90 px-2.5 text-[10px] font-mono text-zinc-400 transition-colors hover:border-zinc-700 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-400"
+          className="inline-flex min-h-8 shrink-0 items-center justify-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/10 hover:text-white cursor-pointer"
           title="Về trang chủ AnonyChat"
           aria-label="Về trang chủ"
         >
-          ← Trang chủ
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Trang chủ</span>
         </button>
       )}
-      <span
-        className={`h-1.5 w-1.5 shrink-0 rounded-full sm:h-2 sm:w-2 ${isUserConnected ? 'bg-emerald-400' : 'bg-zinc-500'}`}
-        role="status"
-        aria-label={isUserConnected ? 'Đã kết nối' : 'Đang tìm người chat'}
-      />
-      <p className="whitespace-nowrap text-[9px] font-medium uppercase tracking-[0.08em] text-zinc-500 sm:text-[10px] sm:tracking-[0.12em]">anonychat</p>
+      <div className="flex items-center gap-2">
+        <span
+          className={`h-2 w-2 shrink-0 rounded-full ${isUserConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400/80'}`}
+          role="status"
+          aria-label={isUserConnected ? 'Đã kết nối' : 'Đang tìm người chat'}
+        />
+        <span className="text-xs sm:text-sm font-medium text-white truncate max-w-[120px] sm:max-w-none">
+          {isUserConnected ? 'Đang trò chuyện' : 'Đang tìm người lạ…'}
+        </span>
+      </div>
+    </div>
+    <div className="flex min-w-0 items-center justify-end gap-2">
+      <OnlineCounter count={onlineCount} />
       <button
         type="button"
         onClick={onOpenDonation}
-        className="inline-flex min-h-8 shrink-0 items-center justify-center gap-1 rounded-full border border-rose-300/20 bg-rose-400/10 px-2 text-[10px] font-medium text-rose-200 transition-colors hover:border-rose-300/40 hover:bg-rose-400/20 active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-300"
+        className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-zinc-300 hover:text-amber-200 hover:bg-white/10 transition-colors cursor-pointer"
         aria-label="Ủng hộ AnonyChat"
       >
-        <svg viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5" aria-hidden="true">
-          <path d="M12 21s-8.25-4.73-8.25-11.06A4.69 4.69 0 0 1 12 7.26a4.69 4.69 0 0 1 8.25 2.68C20.25 16.27 12 21 12 21Z" />
-        </svg>
-        <span className="hidden min-[380px]:inline">Ủng hộ</span>
+        <Heart className="w-3.5 h-3.5 text-amber-300 fill-amber-300/30" />
+        <span>Ủng hộ</span>
       </button>
-    </div>
-    <div className="flex min-w-0 items-center justify-end gap-1 sm:gap-2">
-      <OnlineCounter count={onlineCount} />
       {hasActiveConversation && (
         <button
           type="button"
           onClick={onEndConversation}
-          className="min-h-7 shrink-0 whitespace-nowrap rounded-full border border-rose-400/30 bg-rose-950/30 px-1.5 py-1 text-[9px] font-medium leading-none text-rose-200/80 transition-colors hover:border-rose-300/50 hover:bg-rose-900/40 hover:text-rose-100 sm:min-h-9 sm:px-2 sm:text-[10px]"
+          className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-rose-950/60 hover:border-rose-500/30 hover:text-rose-200 transition-all cursor-pointer"
         >
-          Thoát
+          <LogOut className="w-3 h-3 text-rose-400" />
+          <span>Rời phòng</span>
         </button>
       )}
     </div>
-  </div>
+  </header>
 );
 
 const ChatContainer = ({ children }) => (
-  <div className="relative h-full min-h-0 w-full max-w-none rounded-none bg-[#0b0b0d] p-0 xl:max-w-xl xl:rounded-[1.6rem] xl:p-2">
-    <div className="relative flex h-full min-h-0 flex-col gap-2 md:gap-3">{children}</div>
+  <div className="relative h-full min-h-0 w-full flex flex-col items-center justify-center p-0 sm:p-3 md:p-5 lg:p-6">
+    <div className="relative flex h-full min-h-0 w-full max-w-4xl xl:max-w-5xl flex-col rounded-none sm:rounded-[1.75rem] border-0 sm:border sm:border-white/[0.08] bg-[#0c0d12] shadow-[0_24px_80px_rgba(0,0,0,0.6)] overflow-hidden">
+      {children}
+    </div>
   </div>
 );
 
@@ -1448,7 +1517,8 @@ const ChatApp = ({ onGoHome }) => {
     sendFeedback,
     feedbackStatus,
     clearFeedbackStatus,
-    customBlockWords
+    customBlockWords,
+    partnerColor
   } = useWebSocket(playSound);
 
   const [reportingMessage, setReportingMessage] = useState(null);
@@ -1708,16 +1778,24 @@ const ChatApp = ({ onGoHome }) => {
 
   return (
     <div
-      className="fixed inset-x-0 top-0 flex items-center justify-center overflow-hidden bg-[#08090b] px-1 py-3 text-zinc-100 md:px-2 md:py-8 xl:px-8"
+      className="anonychat-app-root fixed inset-0 flex items-center justify-center overflow-hidden bg-[#08090b] text-zinc-100 font-sans-clean"
       style={{
-        fontFamily: 'Maple Mono, monospace',
         height: `${viewportHeight}px`,
         paddingBottom: keyboardOffset > 0 ? 'max(0.75rem, env(safe-area-inset-bottom))' : undefined,
         paddingTop: keyboardOffset > 0 ? 'max(0.75rem, env(safe-area-inset-top))' : undefined,
         justifyContent: keyboardOffset > 0 ? 'flex-start' : 'center'
       }}
     >
-      <div className="pointer-events-none absolute inset-0 opacity-[0.06] [background-image:linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:18px_18px]" />
+      <div
+        className="pointer-events-none fixed inset-0 z-0 opacity-30"
+        style={{
+          backgroundImage: `
+            radial-gradient(circle at 50% 10%, rgba(255, 255, 255, 0.05) 0%, transparent 60%),
+            radial-gradient(circle at 85% 50%, rgba(110, 231, 183, 0.03) 0%, transparent 50%),
+            radial-gradient(circle at 15% 80%, rgba(147, 197, 253, 0.03) 0%, transparent 50%)
+          `
+        }}
+      />
 
       {activeCelebration && (
         <EasterEggCelebration
@@ -1746,6 +1824,7 @@ const ChatApp = ({ onGoHome }) => {
           isUserConnected={isUserConnected}
           onReact={sendReaction}
           onReport={handleOpenReport}
+          partnerColor={partnerColor}
         />
         <MessageInput
           onSendMessage={handleSendMessage}
