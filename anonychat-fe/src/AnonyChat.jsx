@@ -2,6 +2,7 @@ import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react
 import confetti from 'canvas-confetti';
 import { containsProfanity } from './profanity.js';
 import AdminConsole from './AdminConsole.jsx';
+import LandingPage from './LandingPage.jsx';
 
 const REACTION_EMOJIS = ['❤️', '😂', '😮', '😢', '👍'];
 const ACTIVITY_MILESTONES = [10, 25, 50, 100, 250, 500, 1000];
@@ -1380,9 +1381,20 @@ const DonationModal = ({ onClose }) => {
   );
 };
 
-const ChatHeader = ({ onlineCount, hasActiveConversation, isUserConnected, onEndConversation, onOpenDonation }) => (
+const ChatHeader = ({ onlineCount, hasActiveConversation, isUserConnected, onEndConversation, onOpenDonation, onGoHome }) => (
   <div className="flex shrink-0 items-center justify-between gap-1.5 rounded-[1.05rem] border border-zinc-800/80 bg-[#111214]/80 px-2.5 py-2.5 sm:gap-2 md:px-4 md:py-3">
     <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+      {onGoHome && (
+        <button
+          type="button"
+          onClick={onGoHome}
+          className="inline-flex min-h-8 shrink-0 items-center justify-center gap-1 rounded-full border border-zinc-800 bg-zinc-900/90 px-2.5 text-[10px] font-mono text-zinc-400 transition-colors hover:border-zinc-700 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-400"
+          title="Về trang chủ AnonyChat"
+          aria-label="Về trang chủ"
+        >
+          ← Trang chủ
+        </button>
+      )}
       <span
         className={`h-1.5 w-1.5 shrink-0 rounded-full sm:h-2 sm:w-2 ${isUserConnected ? 'bg-emerald-400' : 'bg-zinc-500'}`}
         role="status"
@@ -1422,7 +1434,7 @@ const ChatContainer = ({ children }) => (
   </div>
 );
 
-const ChatApp = () => {
+const ChatApp = ({ onGoHome }) => {
   const { playSound } = useAudio();
   const {
     isUserConnected,
@@ -1727,6 +1739,7 @@ const ChatApp = () => {
           isUserConnected={isUserConnected}
           onEndConversation={handleEndConversation}
           onOpenDonation={() => setIsDonationOpen(true)}
+          onGoHome={onGoHome}
         />
         <ChatLog
           messages={messages}
@@ -1763,10 +1776,48 @@ const ChatApp = () => {
 };
 
 
-const AnonyChat = () => (
-  window.location.pathname.replace(/\/+$/, '') === '/admin'
-    ? <AdminConsole />
-    : <ChatApp />
-);
+const AnonyChat = () => {
+  const [currentPath, setCurrentPath] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.location.pathname.replace(/\/+$/, '') || '/';
+    }
+    return '/';
+  });
+  const [isDonationOpen, setIsDonationOpen] = useState(false);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setCurrentPath(window.location.pathname.replace(/\/+$/, '') || '/');
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const navigateTo = (path) => {
+    if (window.location.pathname !== path) {
+      window.history.pushState({}, '', path);
+      setCurrentPath(path.replace(/\/+$/, '') || '/');
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  };
+
+  if (currentPath === '/admin') {
+    return <AdminConsole />;
+  }
+
+  if (currentPath === '/chats') {
+    return <ChatApp onGoHome={() => navigateTo('/')} />;
+  }
+
+  return (
+    <>
+      <LandingPage
+        onStartChat={() => navigateTo('/chats')}
+        onOpenDonation={() => setIsDonationOpen(true)}
+      />
+      {isDonationOpen && <DonationModal onClose={() => setIsDonationOpen(false)} />}
+    </>
+  );
+};
 
 export default AnonyChat;

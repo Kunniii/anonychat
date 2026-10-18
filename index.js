@@ -53,8 +53,8 @@ app.use(createAppRouter({
   broadcastBlockList
 }));
 
-// Admin SPA routing
-app.get('/admin', (request, response) => {
+// SPA client routes
+app.get(/^\/(chats|admin)(\/.*)?$/, (request, response) => {
   response.sendFile(path.join(publicDirectory, 'index.html'));
 });
 
