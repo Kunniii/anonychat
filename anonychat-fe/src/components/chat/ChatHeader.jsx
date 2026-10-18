@@ -19,12 +19,12 @@ export const ChatHeader = ({
         : "border-white/[0.06] bg-[#0e0f14]/85"
     }`}
   >
-    <div className="flex min-w-0 items-center gap-2.5 sm:gap-3.5">
+    <div className="flex min-w-0 items-center gap-2 sm:gap-3">
       {onGoHome && (
         <button
           type="button"
           onClick={onGoHome}
-          className="inline-flex min-h-8 shrink-0 items-center justify-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/10 hover:text-white cursor-pointer"
+          className="h-8 shrink-0 inline-flex items-center justify-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 sm:px-3 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/10 hover:text-white cursor-pointer"
           title="Về trang chủ AnonyChat"
           aria-label="Về trang chủ"
         >
@@ -32,7 +32,7 @@ export const ChatHeader = ({
           <span className="hidden sm:inline">Trang chủ</span>
         </button>
       )}
-      <div className="flex items-center gap-2">
+      <div className="h-8 flex items-center gap-2">
         <span
           className={`h-2 w-2 shrink-0 rounded-full ${
             isUserConnected ? "bg-emerald-400 animate-pulse" : "bg-amber-400/80"
@@ -40,15 +40,12 @@ export const ChatHeader = ({
           role="status"
           aria-label={isUserConnected ? "Connected" : "Searching"}
         />
-        <span className="text-xs sm:text-sm font-medium text-white truncate max-w-[120px] sm:max-w-none">
-          {isUserConnected ? "Connected" : "Searching"}
-        </span>
       </div>
       {isVietnamTheme && (
         <button
           type="button"
           onClick={onToggleVietnamTheme}
-          className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/50 bg-[#da251d] hover:bg-[#b81d16] px-3 py-1 text-xs font-bold text-amber-300 transition-all cursor-pointer shadow-[0_0_15px_rgba(218,37,29,0.5)]"
+          className="h-8 shrink-0 inline-flex items-center justify-center gap-1.5 rounded-full border border-amber-400/50 bg-[#da251d] hover:bg-[#b81d16] px-3.5 text-xs font-bold text-amber-300 transition-all cursor-pointer shadow-[0_0_15px_rgba(218,37,29,0.5)]"
           title="Đang bật Theme Tự Hào Việt Nam (Bấm để tắt)"
         >
           <Star className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />

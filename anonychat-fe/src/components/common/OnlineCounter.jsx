@@ -17,7 +17,7 @@ export const OnlineCounter = ({ count }) => {
 
   return (
     <div
-      className={`inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[11px] font-mono-clean text-zinc-300 tabular-nums transition-all duration-300 ${
+      className={`h-8 shrink-0 inline-flex items-center justify-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 text-xs font-mono-clean text-zinc-300 tabular-nums transition-all duration-300 ${
         isAnimating ? 'scale-[1.03]' : 'scale-100'
       }`}
     >
